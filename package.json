@@ -10,7 +10,7 @@
     "backfill": "node --disable-warning=ExperimentalWarning tools/backfill.mjs"
   },
   "dependencies": {
-    "tally": "github:Big-Head-Club/tally#v0.3.0"
+    "tally": "github:Big-Head-Club/tally#v0.4.0"
   },
   "engines": { "node": ">=22.13" }
 }

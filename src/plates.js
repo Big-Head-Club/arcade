@@ -82,6 +82,8 @@ export function plates({ dir, gh }) {
       ws.onmessage = (ev) => { const msg = JSON.parse(ev.data); if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id); } };
       const send = (method, params = {}) => new Promise((res) => { const n = ++id; pending.set(n, res); ws.send(JSON.stringify({ id: n, method, params })); });
       await send('Emulation.setDeviceMetricsOverride', { width: 840, height: 630, deviceScaleFactor: 1, mobile: false });
+      await send('Network.enable');
+      await send('Network.setUserAgentOverride', { userAgent: 'Mozilla/5.0 (compatible; bhc-arcade-plates bot)' });   // never counted as a play
       for (const r of todo) {
         try {
           await send('Page.navigate', { url: r.manifest.url });

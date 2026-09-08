@@ -76,9 +76,14 @@ test('manifest from a repo replaces a seed row, and plays rank the feed', async 
   const f = await (await fetch(`${t.base}/api/games.json`)).json();
   assert.deepEqual(f.games.map((g) => g.slug), ['ringer', 'patient-zero']);
   assert.equal(f.games[0].plays.d7, 3);
+  assert.equal(f.games[0].plays.engaged7, 3);    // the start event counts as engagement
   assert.equal(f.games[0].starts7, 3);
   assert.equal(f.games[0].rank, 1);
   assert.deepEqual(f.families.spotted, ['ringer', 'patient-zero']);
+  // a crawler visiting the low-ranked game 10 times, pageviews only, does not lift it
+  await Promise.all(Array.from({ length: 10 }, (_, i) => fetch(`${t.base}/i`, { method: 'POST', body: JSON.stringify([{ n: 'pageview', s: 'patient-zero.fly.dev' }]), headers: { 'x-forwarded-for': `10.9.9.${i}`, 'user-agent': 'Mozilla/5.0 Chrome' } })));
+  const f2 = await (await fetch(`${t.base}/api/games.json?nocache=${Date.now()}`)).json();
+  assert.equal(f2.games[0].slug, 'ringer');
   const carts = await (await fetch(`${t.base}/api/carts.json`)).json();
   assert.deepEqual(Object.keys(carts[0]).slice(0, 4), ['s', 'n', 'u', 'a']);
   const one = await (await fetch(`${t.base}/api/games/patient-zero.json`)).json();

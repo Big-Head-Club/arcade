@@ -34,9 +34,10 @@ Status is `workshop` (no URL), `live`, or `down`.
 
 Each game carries a `platform` of mobile, desktop, or both; the feed reports `unknown` when the manifest has none.
 
-Rank is 7-day unique visitors from the hub, then 30-day, then all-time, then
-start date. `starts7` counts `start` events, which the skill tells games to
-send.
+Rank is 7-day engaged visitors from the hub (clicked, started, or stayed ten
+seconds; crawlers never do), then 30-day engaged, then plain visitors, then
+start date. `plays` carries both engaged and visitor counts. `starts7` counts
+`start` events, which the skill tells games to send.
 
 ## Running it
 

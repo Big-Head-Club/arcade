@@ -59,6 +59,7 @@ export function createArcade(opts = {}) {
   }
 
   let feedCache = { at: 0, key: '', value: null };
+  tally.events.on('event', () => { feedCache.at = 0; });   // a new event means new numbers
   async function feed(q) {
     const includeAll = q.get('all') === '1';
     const sort = q.get('sort') === 'started' ? 'started' : 'plays';
