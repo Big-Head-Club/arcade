@@ -28,14 +28,22 @@ export function createArcade(opts = {}) {
   // Seed rows never overwrite a real manifest; they fill the gaps on day one.
   if (opts.seed !== false) for (const m of seedManifests({ org: gh.org })) registry.seed(m);
 
+  // A repo's cart.json is one manifest, or a list of them when one repo ships
+  // several variants (one per branch or route). Rows this repo no longer lists go away.
   async function refreshRepo(repoFull) {
     const found = await gh.manifestOf(repoFull);
     if (!found) return null;
-    const m = normalizeManifest(found.raw, { repo: repoFull });
-    m.repo = m.repo || repoFull;
-    const row = registry.upsert(m, { source: 'manifest' });
-    log('registry: manifest', m.slug, 'from', repoFull);
-    return row;
+    const raws = Array.isArray(found.raw) ? found.raw : Array.isArray(found.raw?.carts) ? found.raw.carts : [found.raw];
+    const rows = [];
+    for (const raw of raws) {
+      const m = normalizeManifest(raw, { repo: repoFull });
+      m.repo = m.repo || repoFull;
+      rows.push(registry.upsert(m, { source: 'manifest' }));
+    }
+    const keep = new Set(rows.map((r) => r.slug));
+    for (const r of registry.all()) if (r.repo === repoFull && r.source === 'manifest' && !keep.has(r.slug)) registry.remove(r.slug);
+    log('registry: manifest', rows.map((r) => r.slug).join(','), 'from', repoFull);
+    return rows[0];
   }
 
   async function scanOrg() {

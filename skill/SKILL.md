@@ -48,6 +48,10 @@ Fill it from git, not from questions:
 - `platform`: `mobile`, `desktop`, or `both`. Decide from the game itself: touch controls and a portrait layout mean mobile; keyboard, mouse, or a wide canvas mean desktop; a responsive layout that plays well on either means both. Always set it.
 - Optional: `shell` picks the cartridge colour (whale, galaxy, fish, crown, arch, tower, hare, scarab, moth, lighthouse); `probe` is a string the live page contains if the title does not; `description` is one sentence; `hidden: true` keeps it off the rack.
 
+If one repo ships two versions of the game (two branches, two routes), make
+cart.json a list of manifests, one per version, each with its own slug and
+URL and the same `family`.
+
 ## 2. Add the analytics tag
 
 In the page's HTML, before `</body>` (in the shared layout for a framework):

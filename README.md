@@ -22,7 +22,7 @@ Live at https://bhc-arcade.fly.dev.
 
 ## How a game gets in
 
-A `cart.json` at the root of its repo. The skill in `skill/` writes it; the
+A `cart.json` at the root of its repo, or a list of them when one repo ships several variants. The skill in `skill/` writes it; the
 format is documented there. The registry reads manifests three ways: the
 webhook on push, a full scan of the org once a day, and a `rescan` from the
 admin page. Seed rows from Mack's carts list and the build ledger fill the

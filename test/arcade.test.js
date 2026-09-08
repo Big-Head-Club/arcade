@@ -86,6 +86,20 @@ test('manifest from a repo replaces a seed row, and plays rank the feed', async 
   await t.close();
 });
 
+test('one repo can ship several carts; dropped ones go away', async () => {
+  const repos = { 'Big-Head-Club/flip-duel': [
+    { slug: 'flip-duel', name: 'LORE WARS', url: 'https://lorewars.xyz', family: 'lore-wars', variant: "Gustavo's" },
+    { slug: 'lore-wars', name: 'LORE WARS', url: 'https://lore-wars.up.railway.app', family: 'lore-wars', variant: "Mack's" },
+  ] };
+  const t = await boot({ repos });
+  await t.arcade.scanOrg();
+  assert.deepEqual(t.arcade.registry.all().map((r) => r.slug).sort(), ['flip-duel', 'lore-wars']);
+  repos['Big-Head-Club/flip-duel'].pop();
+  await t.arcade.refreshRepo('Big-Head-Club/flip-duel');
+  assert.deepEqual(t.arcade.registry.all().map((r) => r.slug), ['flip-duel']);
+  await t.close();
+});
+
 test('webhook: signed push refreshes the repo; unsigned is refused', async () => {
   const repos = { 'Big-Head-Club/new-game': { slug: 'new-game', name: 'NEW GAME', url: 'https://new-game.fly.dev' } };
   const t = await boot({ repos });
