@@ -104,6 +104,9 @@ test('one repo can ship several carts; dropped ones go away', async () => {
   repos['Big-Head-Club/flip-duel'].pop();
   await t.arcade.refreshRepo('Big-Head-Club/flip-duel');
   assert.deepEqual(t.arcade.registry.all().map((r) => r.slug), ['flip-duel']);
+  delete repos['Big-Head-Club/flip-duel'];
+  await t.arcade.refreshRepo('Big-Head-Club/flip-duel');
+  assert.deepEqual(t.arcade.registry.all().map((r) => r.slug), []);
   await t.close();
 });
 

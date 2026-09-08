@@ -32,7 +32,11 @@ export function createArcade(opts = {}) {
   // several variants (one per branch or route). Rows this repo no longer lists go away.
   async function refreshRepo(repoFull) {
     const found = await gh.manifestOf(repoFull);
-    if (!found) return null;
+    if (!found) {
+      // The repo dropped its manifest: its rows go with it.
+      for (const r of registry.all()) if (r.repo === repoFull && r.source === 'manifest') registry.remove(r.slug);
+      return null;
+    }
     const raws = Array.isArray(found.raw) ? found.raw : Array.isArray(found.raw?.carts) ? found.raw.carts : [found.raw];
     const rows = [];
     for (const raw of raws) {
