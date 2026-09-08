@@ -32,6 +32,8 @@ Every ten minutes the prober fetches each URL and checks the page mentions
 the game's name (a 200 from an unclaimed Railway subdomain is not live).
 Status is `workshop` (no URL), `live`, or `down`.
 
+Each game carries a `platform` of mobile, desktop, or both; the feed reports `unknown` when the manifest has none.
+
 Rank is 7-day unique visitors from the hub, then 30-day, then all-time, then
 start date. `starts7` counts `start` events, which the skill tells games to
 send.

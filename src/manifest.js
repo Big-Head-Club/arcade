@@ -34,6 +34,7 @@ export function normalizeManifest(raw, { repo } = {}) {
     probe: str(raw.probe, 80),
     site: str(raw.site, 120).toLowerCase() || (url ? new URL(url).hostname.toLowerCase() : ''),
     shell, state,
+    platform: ['mobile', 'desktop', 'both'].includes(raw.platform) ? raw.platform : '',
     description: str(raw.description, 300),
     hidden: raw.hidden === true,
   };

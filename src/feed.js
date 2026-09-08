@@ -13,7 +13,7 @@ export async function buildFeed(registry, tally, { includeAll = false, sort = 'p
       return {
         slug: m.slug, name: m.name, url: m.url, shell: m.shell, plate: `/plates/${m.slug}`,
         designers: m.designers, started: m.started, tags: m.tags, family: m.family, variant: m.variant,
-        description: m.description, repo: m.repo, state: m.state,
+        description: m.description, repo: m.repo, state: m.state, platform: m.platform || 'unknown',
         status: r.status, latency: r.latency, checked: r.checked, source: r.source,
         plays, starts7: st[m.site]?.c ?? 0, events7: s7[m.site]?.events ?? 0,
       };
