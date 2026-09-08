@@ -46,9 +46,22 @@ export function plates({ dir, gh }) {
 
   function placeholder(m) {
     const bg = SHELL_COLORS[m.shell] || '#444';
-    const name = String(m.name).replace(/[<&>]/g, '');
-    const size = name.length > 14 ? 54 : 72;
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="840" height="630" viewBox="0 0 840 630"><rect width="840" height="630" fill="${bg}"/><text x="420" y="330" fill="#fff" font-family="ui-monospace,Menlo,monospace" font-size="${size}" font-weight="700" text-anchor="middle" letter-spacing="4">${name}</text><text x="420" y="400" fill="#fff" fill-opacity=".6" font-family="ui-monospace,Menlo,monospace" font-size="22" text-anchor="middle">${m.variant ? m.variant.replace(/[<&>]/g, '') : 'BIG HEAD CLUB'}</text></svg>`;
+    const esc = (t) => String(t).replace(/[<&>]/g, '');
+    // Wrap the name into lines of at most 12 characters, then size the type to the longest line.
+    const words = esc(m.name).split(/\s+/).filter(Boolean);
+    const lines = [];
+    for (const w of words) {
+      const last = lines[lines.length - 1];
+      if (last !== undefined && (last + ' ' + w).length <= 12) lines[lines.length - 1] = last + ' ' + w;
+      else lines.push(w);
+    }
+    const longest = Math.max(1, ...lines.map((l) => l.length));
+    const size = Math.min(96, Math.floor(700 / (longest * 0.66)), Math.floor(360 / (lines.length * 1.15)));
+    const lh = size * 1.15;
+    const top = 315 - (lh * (lines.length - 1)) / 2;
+    const text = lines.map((l, i) => `<text x="420" y="${Math.round(top + i * lh)}" fill="#fff" font-family="ui-monospace,Menlo,monospace" font-size="${size}" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="3">${l}</text>`).join('');
+    const sub = m.variant ? esc(m.variant) : 'BIG HEAD CLUB';
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="840" height="630" viewBox="0 0 840 630"><rect width="840" height="630" fill="${bg}"/>${text}<text x="420" y="${Math.round(top + (lines.length - 1) * lh + size * 0.9 + 20)}" fill="#fff" fill-opacity=".6" font-family="ui-monospace,Menlo,monospace" font-size="22" text-anchor="middle">${sub}</text></svg>`;
   }
 
   /** Screenshot every live game that has no plate of its own. Needs Chromium. */
