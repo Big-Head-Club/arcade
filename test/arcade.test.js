@@ -77,6 +77,8 @@ test('manifest from a repo replaces a seed row, and plays rank the feed', async 
   assert.deepEqual(f.games.map((g) => g.slug), ['ringer', 'patient-zero']);
   assert.equal(f.games[0].plays.d7, 3);
   assert.equal(f.games[0].plays.engaged7, 3);    // the start event counts as engagement
+  assert.equal(f.games[0].plays.week, 3);
+  assert.equal(f.games[0].plays.by, 'runs');
   assert.equal(f.games[0].starts7, 3);
   assert.equal(f.games[0].rank, 1);
   assert.deepEqual(f.families.spotted, ['ringer', 'patient-zero']);

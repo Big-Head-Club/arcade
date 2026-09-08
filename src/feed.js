@@ -10,18 +10,22 @@ export async function buildFeed(registry, tally, { includeAll = false, sort = 'p
     .map((r) => {
       const m = r.manifest;
       // engaged: visitors who clicked, started, or stayed ten seconds. Crawlers never do; rank on it.
+      const starts7 = st[m.site]?.c ?? 0;
       const plays = { engaged7: g7[m.site]?.engaged ?? 0, engaged30: g30[m.site]?.engaged ?? 0, d7: s7[m.site]?.visitors ?? 0, d30: s30[m.site]?.visitors ?? 0, all: sAll[m.site]?.visitors ?? 0 };
+      // A play is a run when the game reports runs (a start event per run); otherwise an engaged person.
+      plays.week = starts7 > 0 ? starts7 : plays.engaged7;
+      plays.by = starts7 > 0 ? 'runs' : 'people';
       return {
         slug: m.slug, name: m.name, url: m.url, shell: m.shell, plate: `/plates/${m.slug}`,
         designers: m.designers, started: m.started, tags: m.tags, family: m.family, variant: m.variant,
         description: m.description, repo: m.repo, state: m.state, platform: m.platform || 'unknown',
         status: r.status, latency: r.latency, checked: r.checked, source: r.source,
-        plays, starts7: st[m.site]?.c ?? 0, events7: s7[m.site]?.events ?? 0,
+        plays, starts7, events7: s7[m.site]?.events ?? 0,
       };
     });
   const cmp = sort === 'started'
     ? (a, b) => (b.started || '').localeCompare(a.started || '') || a.slug.localeCompare(b.slug)
-    : (a, b) => b.plays.engaged7 - a.plays.engaged7 || b.plays.engaged30 - a.plays.engaged30 || b.plays.d7 - a.plays.d7 || b.plays.d30 - a.plays.d30 || b.plays.all - a.plays.all || (b.started || '').localeCompare(a.started || '') || a.slug.localeCompare(b.slug);
+    : (a, b) => b.plays.week - a.plays.week || b.plays.engaged7 - a.plays.engaged7 || b.plays.engaged30 - a.plays.engaged30 || b.plays.d7 - a.plays.d7 || b.plays.d30 - a.plays.d30 || b.plays.all - a.plays.all || (b.started || '').localeCompare(a.started || '') || a.slug.localeCompare(b.slug);
   games.sort(cmp);
   games.forEach((g, i) => { g.rank = i + 1; });
   const families = {};
@@ -31,5 +35,5 @@ export async function buildFeed(registry, tally, { includeAll = false, sort = 'p
 
 /** The four-field shape hundred-carts already reads, plus plate. */
 export function cartsShape(feed) {
-  return feed.games.map((g) => ({ s: g.slug, n: g.name, u: g.url, a: g.shell, plate: g.plate, rank: g.rank, plays: g.plays.engaged7, visitors: g.plays.d7, family: g.family, variant: g.variant || undefined }));
+  return feed.games.map((g) => ({ s: g.slug, n: g.name, u: g.url, a: g.shell, plate: g.plate, rank: g.rank, plays: g.plays.week, playsBy: g.plays.by, visitors: g.plays.d7, family: g.family, variant: g.variant || undefined }));
 }
