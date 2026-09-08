@@ -1,0 +1,16 @@
+{
+  "name": "arcade",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Big Head Club arcade backend: analytics hub + game registry + plates. One always-on service.",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js",
+    "backfill": "node --disable-warning=ExperimentalWarning tools/backfill.mjs"
+  },
+  "dependencies": {
+    "tally": "github:Big-Head-Club/tally#v0.2.2"
+  },
+  "engines": { "node": ">=22.13" }
+}

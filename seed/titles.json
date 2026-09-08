@@ -1,0 +1,37 @@
+{
+  "_comment": "Projects whose shipped name is not derivable from the repository name or its files. The probe requires a page to answer with the project's own name; these are the names it answers with.",
+  "energy-grid": [
+    "Hex Smash",
+    "Minimal Hex Strategy Game"
+  ],
+  "am-i-dev-now": [
+    "i am dev now"
+  ],
+  "newphonewhodis": [
+    "Are You My Talking Stage"
+  ],
+  "flashpoint": [
+    "Aura Farm"
+  ],
+  "flip-duel": [
+    "Lore Wars"
+  ],
+  "pawsoff": [
+    "Paws Off"
+  ],
+  "daily-maze": [
+    "Maze a Day"
+  ],
+  "spotted": [
+    "Spotted"
+  ],
+  "storm-the-fort-2": [
+    "Fat Ninjas"
+  ],
+  "storm-the-fort": [
+    "Storm the Fort"
+  ],
+  "nextdoor": [
+    "Next Door"
+  ]
+}

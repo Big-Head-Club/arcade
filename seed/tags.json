@@ -1,0 +1,396 @@
+{
+  "mammoth-hunt": [
+    "Solo",
+    "Web",
+    "Text"
+  ],
+  "nimbrek": [
+    "Solo",
+    "Web",
+    "Builder",
+    "Grid"
+  ],
+  "emojivas": [
+    "Daily",
+    "Web",
+    "Guessing",
+    "Emoji"
+  ],
+  "first-year": [
+    "Solo",
+    "Web",
+    "Exploration"
+  ],
+  "rundown": [
+    "Daily",
+    "Web",
+    "Guessing"
+  ],
+  "pandas": [
+    "Solo",
+    "Web",
+    "Collection"
+  ],
+  "left-on-red": [
+    "App",
+    "Web",
+    "Text"
+  ],
+  "ringer": [
+    "Solo",
+    "Web",
+    "Hidden object"
+  ],
+  "think-better": [
+    "Tool",
+    "Web",
+    "Text"
+  ],
+  "daily-lineup": [
+    "Daily",
+    "Web",
+    "Guessing"
+  ],
+  "am-i-dev-now": [
+    "Daily",
+    "Telegram",
+    "Text"
+  ],
+  "spotted": [
+    "Daily",
+    "Telegram",
+    "Hidden object"
+  ],
+  "rachels-app": [
+    "App",
+    "Telegram",
+    "Learning"
+  ],
+  "telegram-dailies": [
+    "Group",
+    "Telegram",
+    "Guessing"
+  ],
+  "daily-boss": [
+    "Group",
+    "Telegram",
+    "Combat"
+  ],
+  "daily-games-bot": [
+    "Tool",
+    "Bot",
+    "Guessing"
+  ],
+  "fantasy-animals": [
+    "Solo",
+    "Web",
+    "Collection"
+  ],
+  "glyphsmith": [
+    "Solo",
+    "Web",
+    "Builder",
+    "Emoji"
+  ],
+  "spoonful": [
+    "App",
+    "Bot",
+    "Text"
+  ],
+  "winter-quarters": [
+    "Solo",
+    "Web",
+    "Memory",
+    "Combat"
+  ],
+  "breach": [
+    "Group",
+    "Web",
+    "Simultaneous",
+    "Combat"
+  ],
+  "game-forge": [
+    "Tool",
+    "Web",
+    "Text"
+  ],
+  "energy-grid": [
+    "Head-to-head",
+    "Web",
+    "Hex",
+    "Simultaneous"
+  ],
+  "boneyard": [
+    "Head-to-head",
+    "Web",
+    "Grid",
+    "Combat"
+  ],
+  "daily-garden": [
+    "Daily",
+    "Web",
+    "Collection"
+  ],
+  "zoo-york": [
+    "Group",
+    "Web",
+    "Builder"
+  ],
+  "horngate": [
+    "App",
+    "Web",
+    "Text"
+  ],
+  "flower-press": [
+    "Daily",
+    "Telegram",
+    "Collection"
+  ],
+  "pirates": [
+    "Head-to-head",
+    "Web",
+    "Hex",
+    "Simultaneous"
+  ],
+  "raid-run": [
+    "Daily",
+    "Web",
+    "Combat"
+  ],
+  "tidbits": [
+    "Group",
+    "Web",
+    "Learning"
+  ],
+  "daily-maze": [
+    "Daily",
+    "Web",
+    "Maze"
+  ],
+  "windline": [
+    "Head-to-head",
+    "Web",
+    "Hex",
+    "Simultaneous"
+  ],
+  "crowd": [
+    "Tool",
+    "3D"
+  ],
+  "atalanta": [
+    "Head-to-head",
+    "Web",
+    "Grid"
+  ],
+  "flashpoint": [
+    "Daily",
+    "Web",
+    "3D",
+    "Physics"
+  ],
+  "flicker": [
+    "Daily",
+    "Web",
+    "Maze"
+  ],
+  "gorgon": [
+    "Head-to-head",
+    "Web",
+    "Grid"
+  ],
+  "hole-in-zero": [
+    "Daily",
+    "Telegram",
+    "Physics"
+  ],
+  "newphonewhodis": [
+    "Daily",
+    "Web",
+    "Memory"
+  ],
+  "patient-zero": [
+    "Daily",
+    "Web",
+    "Hidden object"
+  ],
+  "spotted-3d": [
+    "Daily",
+    "Web",
+    "3D",
+    "Hidden object"
+  ],
+  "detritus": [
+    "Head-to-head",
+    "Web",
+    "Hex"
+  ],
+  "hundred-tins": [
+    "Tool",
+    "Web",
+    "Collection"
+  ],
+  "slime-tide": [
+    "Daily",
+    "Web",
+    "Hex"
+  ],
+  "small-dose-vote": [
+    "Tool",
+    "Web"
+  ],
+  "blast-golf": [
+    "Head-to-head",
+    "Web",
+    "Physics",
+    "Simultaneous"
+  ],
+  "character-engine": [
+    "Tool",
+    "Web",
+    "Sim-tested"
+  ],
+  "corvid-yard": [
+    "Solo",
+    "Web",
+    "Collection"
+  ],
+  "crown-run": [
+    "Daily",
+    "Web",
+    "Simultaneous",
+    "Grid"
+  ],
+  "flip-duel": [
+    "Head-to-head",
+    "Web",
+    "Combat",
+    "Collection"
+  ],
+  "flock": [
+    "Group",
+    "Web",
+    "Simultaneous"
+  ],
+  "frankies-finder": [
+    "Daily",
+    "Web",
+    "Memory",
+    "Hidden object"
+  ],
+  "grandmas-watching": [
+    "Daily",
+    "Web",
+    "Memory",
+    "Hidden object"
+  ],
+  "gruk": [
+    "Daily",
+    "Web",
+    "Text"
+  ],
+  "housekeeping": [
+    "Daily",
+    "Web",
+    "Memory",
+    "Hidden object"
+  ],
+  "hundred-carts": [
+    "Tool",
+    "Web",
+    "Collection"
+  ],
+  "kims-game": [
+    "Daily",
+    "Web",
+    "Memory",
+    "Hidden object"
+  ],
+  "machine": [
+    "Group",
+    "Web",
+    "Hex"
+  ],
+  "night-desk": [
+    "Daily",
+    "Web",
+    "Text"
+  ],
+  "pawsoff": [
+    "Daily",
+    "Web",
+    "Hidden object"
+  ],
+  "relay": [
+    "Tool",
+    "Web",
+    "Template"
+  ],
+  "salmon-run": [
+    "Solo",
+    "Web",
+    "Physics"
+  ],
+  "sheepenomics": [
+    "Daily",
+    "Web",
+    "Text"
+  ],
+  "trail-off": [
+    "App",
+    "Web",
+    "Learning"
+  ],
+  "two-moons": [
+    "Tool",
+    "Web"
+  ],
+  "vine-drop": [
+    "Daily",
+    "Web",
+    "Physics",
+    "Collection"
+  ],
+  "rolland": [
+    "Solo",
+    "Web",
+    "Adventure"
+  ],
+  "villain-generator": [
+    "Tool",
+    "Web",
+    "Text"
+  ],
+  "heist-board": [
+    "Solo",
+    "Web",
+    "Simultaneous"
+  ],
+  "rps-grid": [
+    "Head-to-head",
+    "Web",
+    "Grid"
+  ],
+  "chess-royale": [
+    "Solo",
+    "Web",
+    "Grid"
+  ],
+  "storm-the-fort-2": [
+    "Solo",
+    "Web",
+    "Tactics",
+    "Campaign",
+    "Fat Ninjas"
+  ],
+  "storm-the-fort": [
+    "Testbed",
+    "Web",
+    "Autobattler"
+  ],
+  "nextdoor": [
+    "Daily",
+    "Web",
+    "Hidden object",
+    "3D"
+  ]
+}
