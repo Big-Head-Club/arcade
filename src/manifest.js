@@ -31,6 +31,7 @@ export function normalizeManifest(raw, { repo } = {}) {
     variant: str(raw.variant, 40),
     repo: str(raw.repo, 120) || repo || '',
     plate: str(raw.plate, 200),
+    label: str(raw.label, 200),
     probe: str(raw.probe, 80),
     site: str(raw.site, 120).toLowerCase() || (url ? new URL(url).hostname.toLowerCase() : ''),
     shell, state,

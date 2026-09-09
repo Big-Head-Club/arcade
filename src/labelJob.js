@@ -9,7 +9,18 @@ import { withChromium, findChrome } from './chromium.js';
 
 const SCALE = 4;   // label pixels per window pixel in the raster
 
-export function labels({ dir, plates }) {
+export function labels({ dir, plates, gh }) {
+  const artCache = new Map();   // slug -> { at, art }
+
+  /** The picture for the label: `label` art from the repo if the manifest names one, else the plate. */
+  async function pictureFor(m) {
+    if (m.label && m.repo && gh) {
+      const c = artCache.get(m.slug);
+      if (c && Date.now() - c.at < 3_600_000) return c.art;
+      try { const f = await gh.fileOf(m.repo, m.label); if (f) { const art = { bytes: f.bytes, type: f.type.split(';')[0], own: true }; artCache.set(m.slug, { at: Date.now(), art }); return art; } } catch {}
+    }
+    return plates.get(m);
+  }
   mkdirSync(dir, { recursive: true });
 
   function keyFor(m, plate) {
@@ -19,7 +30,7 @@ export function labels({ dir, plates }) {
 
   /** The rendered PNG if the cache holds a current one, else the live SVG. */
   async function get(m) {
-    const plate = await plates.get(m);
+    const plate = await pictureFor(m);
     const key = keyFor(m, plate);
     const hit = join(dir, `${m.slug}.${key}.png`);
     if (existsSync(hit)) return { bytes: readFileSync(hit), type: 'image/png', rendered: true };
@@ -28,7 +39,7 @@ export function labels({ dir, plates }) {
     return { bytes: Buffer.from(labelSvg(m, plate)), type: 'image/svg+xml', rendered: false };
   }
 
-  async function svg(m) { return labelSvg(m, await plates.get(m)); }
+  async function svg(m) { return labelSvg(m, await pictureFor(m)); }
 
   /** Render every label whose inputs changed. Returns how many were rendered. */
   async function render(rows, { log = () => {}, force = false } = {}) {
@@ -36,31 +47,34 @@ export function labels({ dir, plates }) {
     const todo = [];
     for (const r of rows) {
       if (r.manifest.hidden) continue;
-      const plate = await plates.get(r.manifest);
+      const plate = await pictureFor(r.manifest);
       const key = keyFor(r.manifest, plate);
       if (!force && existsSync(join(dir, `${r.slug}.${key}.png`))) continue;
       todo.push({ m: r.manifest, plate, key });
     }
     if (!todo.length) return 0;
     let done = 0;
-    await withChromium(async (send, { wait }) => {
+    await withChromium(async ({ page, wait }) => {
       for (const { m, plate, key } of todo) {
+        let tab;
         try {
+          tab = await page();
           const [W, H] = WINDOWS[WINDOWS[m.shell] ? m.shell : 'hare'];
           const w = W * SCALE, h = H * SCALE;
-          await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: false });
+          await tab.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: false });
+          await tab.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
           const svgText = labelSvg(m, plate);
           const html = `<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:transparent}img{display:block;width:${w}px;height:${h}px}</style><img src="data:image/svg+xml;base64,${Buffer.from(svgText).toString('base64')}">`;
-          await send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
-          await send('Page.navigate', { url: 'data:text/html;base64,' + Buffer.from(html).toString('base64') });
-          await wait(400);
-          const shot = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: w, height: h, scale: 1 } });
+          await tab.send('Page.navigate', { url: 'data:text/html;base64,' + Buffer.from(html).toString('base64') });
+          await wait(600);
+          const shot = await tab.send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: w, height: h, scale: 1 } });
           if (shot?.data) {
             for (const f of files(m.slug)) unlinkSync(join(dir, f));
             writeFileSync(join(dir, `${m.slug}.${key}.png`), Buffer.from(shot.data, 'base64'));
             done++;
           }
         } catch (e) { log(`labels: ${m.slug}: ${e.message}`); }
+        finally { await tab?.close(); }
       }
     }, { log });
     log(`labels: rendered ${done} of ${todo.length}`);

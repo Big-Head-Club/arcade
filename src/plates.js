@@ -58,17 +58,21 @@ export function plates({ dir, gh }) {
     const todo = rows.filter((r) => r.status === 'live' && !r.manifest.plate && !r.manifest.hidden);
     if (!todo.length) return 0;
     let done = 0;
-    await withChromium(async (send, { wait }) => {
-      await send('Emulation.setDeviceMetricsOverride', { width: 840, height: 630, deviceScaleFactor: 1, mobile: false });
+    await withChromium(async ({ page, wait }) => {
       for (const r of todo) {
+        let tab;
         try {
-          await send('Page.navigate', { url: r.manifest.url });
+          tab = await page();
+          await tab.send('Emulation.setDeviceMetricsOverride', { width: 840, height: 630, deviceScaleFactor: 1, mobile: false });
+          await tab.send('Page.navigate', { url: r.manifest.url });
           await wait(5000);
-          const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 80 });
+          const shot = await tab.send('Page.captureScreenshot', { format: 'jpeg', quality: 80 });
           if (shot?.data) { writeFileSync(join(dir, `${r.slug}.shot.jpg`), Buffer.from(shot.data, 'base64')); done++; }
         } catch (e) { log(`plates: ${r.slug}: ${e.message}`); }
+        finally { await tab?.close(); }
       }
     }, { log });
+    log(`plates: shot ${done} of ${todo.length}`);
     return done;
   }
 

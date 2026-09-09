@@ -23,7 +23,7 @@ export function createArcade(opts = {}) {
   const registry = openRegistry(opts.registryFile || join(dataDir, 'registry.sqlite'));
   const gh = opts.gh || github({ token: opts.githubToken ?? process.env.GITHUB_TOKEN, org: opts.org || process.env.GITHUB_ORG || 'Big-Head-Club', fetchImpl: opts.fetch });
   const plates = makePlates({ dir: join(dataDir, 'plates'), gh });
-  const labels = makeLabels({ dir: join(dataDir, 'labels'), plates });
+  const labels = makeLabels({ dir: join(dataDir, 'labels'), plates, gh });
   const webhookSecret = opts.webhookSecret ?? process.env.WEBHOOK_SECRET ?? '';
   const log = opts.log || ((...a) => console.log(new Date().toISOString(), ...a));
   let adminToken;
