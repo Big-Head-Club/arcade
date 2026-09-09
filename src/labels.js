@@ -46,89 +46,97 @@ function fitTitle(name, boxW, maxSize, minSize = 8) {
  * @param g       { slug, name, shell, started, variant }
  * @param picture { bytes, type, own }   the picture: the repo's own label art (own: true, title inside it) or the plate
  */
-export function labelSvg(g, picture, opts = {}) {
+export function labelSvg(g, plate, opts = {}) {
   const shell = WINDOWS[g.shell] ? g.shell : 'hare';
   const [W, H] = WINDOWS[shell];
   const scale = opts.scale || 4;
   const w = W * scale, h = H * scale;
   const r = rng(g.slug + '|label');
-  const accent = SHELL_COLORS[shell] || '#444';
+  const dataUri = plate ? `data:${plate.type};base64,${plate.bytes.toString('base64')}` : '';
+  const ownArt = !!(plate && plate.own);
   const ink = '#111';
-  const silver = '#cfcfcb', silverHi = '#f2f2ee', silverLo = '#a9a9a4';
-  const rail = '#8f8f8a', railText = '#1c1c1a';
-  const dataUri = picture ? `data:${picture.type};base64,${picture.bytes.toString('base64')}` : '';
-  const ownArt = !!(picture && picture.own);
+  const frameColor = '#ece9e2';
+  const designer = (g.designers && g.designers[0]) ? String(g.designers[0]).toUpperCase() : 'BIG HEAD';
+  // a screenshot printed as a poster: dark ink to the shell's colour, brightened so it reads at label size
+  const hex = (SHELL_COLORS[shell] || '#888').slice(1);
+  const rgb = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const lum = 0.3 * rgb[0] + 0.59 * rgb[1] + 0.11 * rgb[2];
+  const lift = lum < 0.35 ? 0.35 / Math.max(lum, 0.05) : 1;
+  const inkTone = rgb.map((c) => Math.min(1, c * lift));
+  // each output channel = grey * (1 - tone) + grey * tone... simpler: out = dark + grey * (bright - dark)
+  const tone = inkTone.map((c) => `${(0.06).toFixed(2)} ${(c - 0.06).toFixed(3)}`);   // [offset, slope] per channel
 
-  // geometry, in label pixels
-  const radius = Math.round(w * 0.035);
-  const railW = Math.round(w * 0.075);
-  const stripH = Math.round(h * 0.085);
-  const gap = Math.round(w * 0.012);
-  const artX = railW + gap, artW = w - 2 * railW - 2 * gap;
-  const artY = stripH + gap, artH = h - stripH - gap * 2;
-  const serial = `BHC-${createHash('sha1').update(g.slug).digest('hex').slice(0, 3).toUpperCase()}-USA`;
-  const region = g.started ? g.started.slice(0, 4) : '2026';
+  // The real thing: art wall to wall inside a thin frame. Everything else is small.
+  const frame = Math.round(w * 0.055);                 // the white border, wordmark and serial live in it
+  const ax = frame, ay = frame, aw = w - frame * 2, ah = h - frame * 2;
+  const seal = Math.round(w * 0.11);                   // the round seal, top right
+  const pub = { w: Math.round(w * 0.3), h: Math.round(h * 0.055) };   // the publisher box, bottom left
 
-  // the wordmark: a small red pill, then the system name heavy and italic, like the one it quotes
-  const pillH = Math.round(stripH * 0.52), pillW = Math.round(pillH * 3.1), pillX = artX + Math.round(w * 0.02), pillY = Math.round((stripH - pillH) / 2);
-  const markSize = Math.round(stripH * 0.66);
+  // the logo: big, two lines at most, heavy outlined type with a drop shadow, a little skew
+  const t = fitTitle(g.name, aw * 0.92, Math.round(h * 0.13));
+  const lineH = t.size * 1.0;
+  const logoTop = ay + ah * 0.06;
+  const logoFill = ['#ffd94a', '#ff8a3d', '#7fe3ff', '#ff6b9d', '#c8ff5a', '#ffffff'][Math.floor(r() * 6)];
+  const skew = -(4 + r() * 6).toFixed(1);
+  const tilt = ((r() - 0.5) * 4).toFixed(1);
 
-  // the title, only when the picture is a plate (own art carries its own logo)
-  const t = ownArt ? null : fitTitle(g.name, artW - gap * 4, Math.round(artW * 0.14), 9);
-  const lineH = t ? t.size * 1.02 : 0;
-  const titleBlockH = t ? lineH * t.lines.length + gap * 3 : 0;
-
-  // wear, seeded
-  const scratches = Array.from({ length: 2 + Math.floor(r() * 4) }, () => {
-    const x1 = r() * w, y1 = r() * h, len = w * (0.15 + r() * 0.35), ang = r() * Math.PI;
-    return `<line x1="${x1.toFixed(0)}" y1="${y1.toFixed(0)}" x2="${(x1 + Math.cos(ang) * len).toFixed(0)}" y2="${(y1 + Math.sin(ang) * len).toFixed(0)}" stroke="#fff" stroke-opacity="${(0.15 + r() * 0.25).toFixed(2)}" stroke-width="${(0.6 + r() * 1.2).toFixed(1)}"/>`;
-  }).join('');
-  const nicks = Array.from({ length: 2 + Math.floor(r() * 3) }, () => {
-    const onLeft = r() < 0.5, onTop = r() < 0.5;
-    const cx = onLeft ? r() * railW * 0.6 : w - r() * railW * 0.6, cy = onTop ? r() * h * 0.25 : h - r() * h * 0.25;
-    return `<ellipse cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" rx="${(3 + r() * 8).toFixed(0)}" ry="${(2 + r() * 5).toFixed(0)}" fill="${silverHi}" fill-opacity="${(0.6 + r() * 0.4).toFixed(2)}"/>`;
+  // wear, seeded: scuffs on the frame, a scratch or two across the art, a rubbed corner
+  const scratches = Array.from({ length: 2 + Math.floor(r() * 3) }, () => {
+    const x1 = r() * w, y1 = r() * h, len = w * (0.12 + r() * 0.3), ang = r() * Math.PI;
+    return `<line x1="${x1.toFixed(0)}" y1="${y1.toFixed(0)}" x2="${(x1 + Math.cos(ang) * len).toFixed(0)}" y2="${(y1 + Math.sin(ang) * len).toFixed(0)}" stroke="#fff" stroke-opacity="${(0.15 + r() * 0.2).toFixed(2)}" stroke-width="${(0.6 + r() * 1).toFixed(1)}"/>`;
   }).join('');
   const cornerX = r() < 0.5 ? 0 : w, cornerY = r() < 0.5 ? 0 : h;
-  const sheenAngle = 20 + Math.floor(r() * 30);
-  const rough = (0.7 + r() * 1.0).toFixed(2);
-  const seeds = [1, 2, 3, 4].map(() => Math.floor(r() * 999));
+  const rough = (0.7 + r() * 0.9).toFixed(2);
+  const serial = `BHC-${createHash('sha1').update(g.slug).digest('hex').slice(0, 3).toUpperCase()}-USA`;
+  const seeds = [0, 0, 0, 0].map(() => Math.floor(r() * 999));
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${w} ${h}">
 <defs>
-  <linearGradient id="foil" gradientTransform="rotate(${sheenAngle})"><stop offset="0" stop-color="${silverLo}"/><stop offset="0.35" stop-color="${silverHi}"/><stop offset="0.55" stop-color="${silver}"/><stop offset="1" stop-color="${silverLo}"/></linearGradient>
-  <linearGradient id="strip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f7f3"/><stop offset="1" stop-color="#dcdcd7"/></linearGradient>
-  <linearGradient id="titleShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.78"/></linearGradient>
-  <filter id="grain" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="${seeds[0]}"/><feColorMatrix type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0.12 0"/></filter>
-  <filter id="scuff" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.03 0.05" numOctaves="3" seed="${seeds[1]}"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 0.97  0 0 0 0.9 -0.58"/></filter>
-  <filter id="tatter" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="${seeds[2]}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="${(w * 0.011 * rough).toFixed(1)}" xChannelSelector="R" yChannelSelector="G"/></filter>
-  <filter id="worn" x="0" y="0" width="1" height="1"><feColorMatrix type="saturate" values="0.88"/><feComponentTransfer><feFuncR type="linear" slope="0.97" intercept="0.015"/><feFuncG type="linear" slope="0.96" intercept="0.015"/><feFuncB type="linear" slope="0.92" intercept="0.01"/></feComponentTransfer></filter>
-  <filter id="halftone" x="0" y="0" width="1" height="1"><feTurbulence type="turbulence" baseFrequency="1.1" numOctaves="1" seed="${seeds[3]}"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.07 0"/></filter>
-  <radialGradient id="corner" cx="${cornerX}" cy="${cornerY}" r="${Math.round(w * 0.5)}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${silverHi}" stop-opacity="0.8"/><stop offset="0.4" stop-color="${silverHi}" stop-opacity="0.3"/><stop offset="1" stop-color="${silverHi}" stop-opacity="0"/></radialGradient>
-  <mask id="edge"><rect x="0" y="0" width="${w}" height="${h}" rx="${radius}" fill="#fff" filter="url(#tatter)"/></mask>
-  <clipPath id="art"><rect x="${artX}" y="${artY}" width="${artW}" height="${artH}"/></clipPath>
+  <filter id="grain" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="${seeds[0]}"/><feColorMatrix type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.09  0 0 0 0 0.07  0 0 0 0.09 0"/></filter>
+  <filter id="scuff" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.03 0.05" numOctaves="3" seed="${seeds[1]}"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.98  0 0 0 0 0.94  0 0 0 0.9 -0.6"/></filter>
+  <filter id="tatter" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="${seeds[2]}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="${(w * 0.009 * rough).toFixed(1)}" xChannelSelector="R" yChannelSelector="G"/></filter>
+  ${ownArt
+    ? `<filter id="print" x="0" y="0" width="1" height="1"><feColorMatrix type="saturate" values="1.05"/></filter>`
+    : `<filter id="print" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+    <feColorMatrix type="saturate" values="0"/>
+    <feComponentTransfer><feFuncR type="discrete" tableValues="0 0.35 0.7 1"/><feFuncG type="discrete" tableValues="0 0.35 0.7 1"/><feFuncB type="discrete" tableValues="0 0.35 0.7 1"/></feComponentTransfer>
+    <feColorMatrix type="matrix" values="${tone[0].split(' ')[1]} 0 0 0 ${tone[0].split(' ')[0]}  0 ${tone[1].split(' ')[1]} 0 0 ${tone[1].split(' ')[0]}  0 0 ${tone[2].split(' ')[1]} 0 ${tone[2].split(' ')[0]}  0 0 0 1 0"/>
+  </filter>`}
+  <filter id="worn" x="0" y="0" width="1" height="1"><feColorMatrix type="saturate" values="0.9"/><feComponentTransfer><feFuncR type="linear" slope="0.97" intercept="0.02"/><feFuncG type="linear" slope="0.96" intercept="0.02"/><feFuncB type="linear" slope="0.92" intercept="0.01"/></feComponentTransfer></filter>
+  <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur stdDeviation="${(t.size * 0.05).toFixed(1)}"/></filter>
+  <linearGradient id="logo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="0.45" stop-color="${logoFill}"/><stop offset="1" stop-color="${logoFill}"/></linearGradient>
+  <linearGradient id="sheen" gradientTransform="rotate(${Math.floor(r() * 360)})"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.08"/></linearGradient>
+  <radialGradient id="corner" cx="${cornerX}" cy="${cornerY}" r="${Math.round(w * 0.45)}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${frameColor}" stop-opacity="0.75"/><stop offset="0.4" stop-color="${frameColor}" stop-opacity="0.25"/><stop offset="1" stop-color="${frameColor}" stop-opacity="0"/></radialGradient>
+  <mask id="edge"><rect x="0" y="0" width="${w}" height="${h}" rx="${Math.round(w * 0.035)}" fill="#fff" filter="url(#tatter)"/></mask>
+  <clipPath id="art"><rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" rx="${Math.round(w * 0.012)}"/></clipPath>
 </defs>
 <g mask="url(#edge)" filter="url(#worn)">
-  <rect width="${w}" height="${h}" fill="url(#foil)"/>
+  <rect width="${w}" height="${h}" fill="${frameColor}"/>
   <rect width="${w}" height="${h}" filter="url(#grain)"/>
-  <rect x="0" y="0" width="${railW}" height="${h}" fill="${rail}"/>
-  <rect x="${w - railW}" y="0" width="${railW}" height="${h}" fill="${rail}"/>
-  <text transform="translate(${Math.round(railW * 0.68)} ${Math.round(h * 0.5)}) rotate(-90)" text-anchor="middle" font-family="'Liberation Sans','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="${Math.round(railW * 0.5)}" fill="${railText}" letter-spacing="${(railW * 0.04).toFixed(1)}">${serial}</text>
-  <text transform="translate(${Math.round(w - railW * 0.32)} ${Math.round(h * 0.5)}) rotate(90)" text-anchor="middle" font-family="'Liberation Sans','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="${Math.round(railW * 0.5)}" fill="${railText}" letter-spacing="${(railW * 0.04).toFixed(1)}">100 DAYS · ${region}</text>
-  <rect x="${artX}" y="0" width="${artW}" height="${stripH}" fill="url(#strip)"/>
-  <rect x="${pillX}" y="${pillY}" width="${pillW}" height="${pillH}" rx="${Math.round(pillH / 2)}" fill="none" stroke="#c8102e" stroke-width="${Math.max(1.5, pillH * 0.09).toFixed(1)}"/>
-  <text x="${pillX + pillW / 2}" y="${pillY + pillH * 0.72}" text-anchor="middle" font-family="'Liberation Sans','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="${Math.round(pillH * 0.52)}" fill="#c8102e" letter-spacing="${(pillH * 0.02).toFixed(1)}">BIG HEAD</text>
-  <text x="${pillX + pillW + Math.round(w * 0.018)}" y="${Math.round(stripH * 0.74)}" font-family="'Arial Black','Liberation Sans','Helvetica Neue',Arial,sans-serif" font-weight="900" font-style="italic" font-size="${markSize}" fill="${ink}" letter-spacing="${(markSize * 0.01).toFixed(1)}">CLUB</text>
-  <text x="${artX + artW - Math.round(w * 0.02)}" y="${Math.round(stripH * 0.72)}" text-anchor="end" font-family="'Liberation Sans','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="${Math.round(stripH * 0.28)}" fill="${ink}" fill-opacity="0.7">TM</text>
-  <rect x="${artX}" y="${artY}" width="${artW}" height="${artH}" fill="#101010"/>
-  ${dataUri ? `<image xlink:href="${dataUri}" x="${artX}" y="${artY}" width="${artW}" height="${artH}" preserveAspectRatio="xMidYMid slice" clip-path="url(#art)"/>` : ''}
-  ${t ? `<rect x="${artX}" y="${artY + artH - titleBlockH - gap * 2}" width="${artW}" height="${titleBlockH + gap * 2}" fill="url(#titleShade)" clip-path="url(#art)"/>${t.lines.map((line, i) => `<text x="${artX + artW / 2}" y="${(artY + artH - gap * 2.2 - lineH * (t.lines.length - 1 - i)).toFixed(0)}" text-anchor="middle" font-family="Impact,'Liberation Sans Narrow','Arial Narrow','Arial Black',Helvetica,sans-serif" font-weight="900" font-size="${t.size}" fill="#fff" stroke="#000" stroke-width="${(t.size * 0.06).toFixed(1)}" paint-order="stroke" letter-spacing="${(t.size * 0.02).toFixed(1)}">${esc(line)}</text>`).join('')}` : ''}
-  <rect x="${artX}" y="${artY}" width="${artW}" height="${artH}" filter="url(#halftone)" clip-path="url(#art)"/>
-  <rect x="${artX}" y="${artY}" width="${artW}" height="${artH}" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="${Math.max(1.5, w * 0.004).toFixed(1)}"/>
-  ${g.variant ? `<text x="${artX + artW - gap}" y="${artY + Math.round(artW * 0.06)}" text-anchor="end" font-family="'Liberation Sans','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="${Math.round(artW * 0.045)}" fill="#fff" fill-opacity="0.85" stroke="#000" stroke-opacity="0.5" stroke-width="1.5" paint-order="stroke">${esc(g.variant.toUpperCase())}</text>` : ''}
+  <rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="#1a1612"/>
+  ${dataUri ? `<image xlink:href="${dataUri}" x="${ax}" y="${ay}" width="${aw}" height="${ah}" preserveAspectRatio="xMidYMid slice" clip-path="url(#art)" filter="url(#print)"/>` : ''}
+  ${ownArt ? '' : `
+  <g transform="translate(${w / 2} ${logoTop}) rotate(${tilt}) skewX(${skew})" text-anchor="middle" font-family="Impact,'Liberation Sans Narrow','Arial Narrow','Arial Black',Helvetica,sans-serif" font-weight="900" font-size="${t.size}" letter-spacing="${(t.size * 0.02).toFixed(1)}">
+    ${t.lines.map((line, i) => `<text x="${(t.size * 0.06).toFixed(0)}" y="${(lineH * (i + 0.95) + t.size * 0.06).toFixed(0)}" fill="#000" fill-opacity="0.55" filter="url(#shadow)">${esc(line)}</text>`).join('')}
+    ${t.lines.map((line, i) => `<text x="0" y="${(lineH * (i + 0.95)).toFixed(0)}" fill="url(#logo)" stroke="${ink}" stroke-width="${(t.size * 0.11).toFixed(1)}" stroke-linejoin="round" paint-order="stroke fill">${esc(line)}</text>`).join('')}
+  </g>`}
+  <rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" rx="${Math.round(w * 0.012)}" fill="none" stroke="${ink}" stroke-opacity="0.35" stroke-width="${Math.max(1.5, w * 0.004).toFixed(1)}"/>
+  <text transform="translate(${(frame * 0.68).toFixed(0)} ${(h - frame * 1.2).toFixed(0)}) rotate(-90)" font-family="'Arial Black','Liberation Sans',Arial,sans-serif" font-weight="900" font-size="${Math.round(frame * 0.62)}" fill="${ink}" letter-spacing="${(frame * 0.03).toFixed(1)}">Big Head <tspan font-style="italic">CLUB</tspan><tspan font-size="${Math.round(frame * 0.32)}" dy="-${Math.round(frame * 0.25)}">™</tspan></text>
+  <text transform="translate(${(w - frame * 0.28).toFixed(0)} ${(frame * 1.2).toFixed(0)}) rotate(90)" font-family="'Liberation Sans',Arial,sans-serif" font-weight="700" font-size="${Math.round(frame * 0.42)}" fill="${ink}" fill-opacity="0.8" letter-spacing="${(frame * 0.05).toFixed(1)}">${serial} · THIS SIDE OUT</text>
+  <g transform="translate(${(w - frame - seal * 0.62).toFixed(0)} ${(ay + seal * 0.62).toFixed(0)})">
+    <circle r="${(seal * 0.5).toFixed(0)}" fill="#f6e7a6" stroke="#8a6d1f" stroke-width="${(seal * 0.05).toFixed(1)}"/>
+    <circle r="${(seal * 0.36).toFixed(0)}" fill="none" stroke="#8a6d1f" stroke-width="${(seal * 0.03).toFixed(1)}"/>
+    <text y="${(seal * 0.06).toFixed(0)}" text-anchor="middle" font-family="'Arial Black','Liberation Sans',Arial,sans-serif" font-weight="900" font-size="${Math.round(seal * 0.17)}" fill="#5a4612">100</text>
+    <text y="${(seal * 0.22).toFixed(0)}" text-anchor="middle" font-family="'Liberation Sans',Arial,sans-serif" font-weight="700" font-size="${Math.round(seal * 0.09)}" fill="#5a4612">DAYS</text>
+  </g>
+  <g transform="translate(${(ax + frame * 0.5).toFixed(0)} ${(h - frame - pub.h - frame * 0.4).toFixed(0)})">
+    <rect width="${pub.w}" height="${pub.h}" fill="#fff" stroke="${ink}" stroke-width="${Math.max(1.5, w * 0.004).toFixed(1)}"/>
+    <text x="${(pub.w / 2).toFixed(0)}" y="${(pub.h * 0.72).toFixed(0)}" text-anchor="middle" font-family="'Arial Black','Liberation Sans',Arial,sans-serif" font-weight="900" font-size="${Math.round(pub.h * 0.62)}" fill="${ink}" letter-spacing="${(pub.h * 0.06).toFixed(1)}">${esc(designer)}</text>
+  </g>
+  <rect width="${w}" height="${h}" fill="url(#sheen)"/>
   <rect width="${w}" height="${h}" filter="url(#scuff)" opacity="0.45"/>
   <rect width="${w}" height="${h}" fill="url(#corner)"/>
   ${scratches}
-  ${nicks}
 </g>
 </svg>`;
 }
