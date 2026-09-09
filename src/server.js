@@ -10,6 +10,8 @@ import { github, verifySignature } from './github.js';
 import { normalizeManifest } from './manifest.js';
 import { probeAll } from './probe.js';
 import { plates as makePlates } from './plates.js';
+import { labels as makeLabels } from './labelJob.js';
+import { WINDOWS } from './labels.js';
 import { buildFeed, cartsShape } from './feed.js';
 import { seedManifests } from './seed.js';
 import { homePage } from './home.js';
@@ -21,6 +23,7 @@ export function createArcade(opts = {}) {
   const registry = openRegistry(opts.registryFile || join(dataDir, 'registry.sqlite'));
   const gh = opts.gh || github({ token: opts.githubToken ?? process.env.GITHUB_TOKEN, org: opts.org || process.env.GITHUB_ORG || 'Big-Head-Club', fetchImpl: opts.fetch });
   const plates = makePlates({ dir: join(dataDir, 'plates'), gh });
+  const labels = makeLabels({ dir: join(dataDir, 'labels'), plates });
   const webhookSecret = opts.webhookSecret ?? process.env.WEBHOOK_SECRET ?? '';
   const log = opts.log || ((...a) => console.log(new Date().toISOString(), ...a));
   let adminToken;
@@ -100,6 +103,15 @@ export function createArcade(opts = {}) {
       const img = await plates.get(row.manifest);
       return send(res, 200, img.bytes, img.type, { 'cache-control': 'public, max-age=3600' });
     }
+    if ((m = p.match(/^\/labels\/([a-z0-9-]+)(?:\.(svg|png))?$/))) {
+      const row = registry.get(m[1]);
+      if (!row) return send(res, 404, 'no such game', 'text/plain');
+      const shell = url.searchParams.get('shell');
+      const man = shell && WINDOWS[shell] ? { ...row.manifest, shell } : row.manifest;
+      if (m[2] === 'svg') return send(res, 200, await labels.svg(man), 'image/svg+xml', { 'cache-control': 'public, max-age=300' });
+      const img = await labels.get(man);
+      return send(res, 200, img.bytes, img.type, { 'cache-control': img.rendered && !img.stale ? 'public, max-age=3600' : 'public, max-age=120' });
+    }
     if (p === '/hooks/github' && req.method === 'POST') {
       const body = await readBody(req, 1_000_000);
       if (body == null) return send(res, 413, 'too big', 'text/plain');
@@ -118,10 +130,30 @@ export function createArcade(opts = {}) {
       if (!adminToken || m[1] !== adminToken) return send(res, 404, 'not found', 'text/plain');
       if (m[2] === 'rescan' && req.method === 'POST') { scanOrg().catch((e) => log('rescan', e.message)); return send(res, 202, { started: true }); }
       if (m[2] === 'probe' && req.method === 'POST') { probeAll(registry).then(() => { feedCache.at = 0; }).catch((e) => log('probe', e.message)); return send(res, 202, { started: true }); }
-      if (m[2] === 'shoot' && req.method === 'POST') { plates.shoot(registry.all(), { log }).then((n) => log('plates: shot', n)).catch((e) => log('shoot', e.message)); return send(res, 202, { started: true }); }
+      if (m[2] === 'shoot' && req.method === 'POST') { nightly().catch((e) => log('shoot', e.message)); return send(res, 202, { started: true }); }
+      if (m[2] === 'labels' && req.method === 'POST') { labels.render(registry.all(), { log, force: url.searchParams.get('force') === '1' }).catch((e) => log('labels', e.message)); return send(res, 202, { started: true }); }
+      if (m[2] === 'labels.html') return send(res, 200, proofSheet(registry.all()), 'text/html; charset=utf-8');
       return send(res, 200, { lastScan: registry.meta('lastScan'), github: gh.hasToken ? 'token' : 'anonymous', games: registry.all() });
     }
     send(res, 404, 'not found', 'text/plain');
+  }
+
+  /** The night job: new screenshots for games without a plate, then labels for anything whose inputs changed. */
+  async function nightly() {
+    const shot = await plates.shoot(registry.all(), { log });
+    log('plates: shot', shot);
+    const rendered = await labels.render(registry.all(), { log });
+    return { shot, rendered };
+  }
+
+  /** Every label in its shell's window, for a look at the whole set. */
+  function proofSheet(rows) {
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const cells = rows.filter((r) => !r.manifest.hidden).map((r) => {
+      const [w, h] = WINDOWS[WINDOWS[r.manifest.shell] ? r.manifest.shell : 'hare'];
+      return `<figure><img src="/labels/${esc(r.slug)}" width="${w * 1.5}" height="${h * 1.5}" alt=""><figcaption>${esc(r.manifest.name)}<br><span>${esc(r.manifest.shell)} · ${w}×${h} · ${r.status}</span></figcaption></figure>`;
+    }).join('');
+    return `<!doctype html><meta charset="utf-8"><title>Labels</title><style>body{margin:0;background:#2a2622;color:#ddd;font:13px ui-monospace,Menlo,monospace;padding:24px}h1{font-size:16px;margin:0 0 16px}main{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}figure{margin:0}img{display:block;box-shadow:0 8px 20px -8px #000}figcaption{margin-top:6px}figcaption span{color:#998}</style><h1>Labels · ${rows.length} games · <a style="color:#f2812f" href="labels" onclick="fetch('labels',{method:'POST'});return false">render changed</a> · <a style="color:#f2812f" href="labels?force=1" onclick="fetch('labels?force=1',{method:'POST'});return false">render all</a></h1><main>${cells}</main>`;
   }
 
   const timers = [];
@@ -137,7 +169,7 @@ export function createArcade(opts = {}) {
       timers.push(setInterval(() => scanOrg().catch((e) => log('scan', e.message)), 24 * 3_600_000));
       timers.push(setInterval(() => {
         const h = new Date().getHours();
-        if (h === 4) plates.shoot(registry.all(), { log }).then((n) => n && log('plates: shot', n)).catch((e) => log('shoot', e.message));
+        if (h === 4) nightly().catch((e) => log('nightly', e.message));
       }, 3_600_000));
     }
     for (const t of timers) t.unref?.();
@@ -145,7 +177,7 @@ export function createArcade(opts = {}) {
 
   async function close() { for (const t of timers) clearInterval(t); registry.close(); await tally.close(); }
 
-  return { handle, start, close, tally, registry, gh, plates, refreshRepo, scanOrg, feed, get adminToken() { return adminToken; }, publicUrl };
+  return { handle, start, close, tally, registry, gh, plates, labels, nightly, refreshRepo, scanOrg, feed, get adminToken() { return adminToken; }, publicUrl };
 }
 
 function readBody(req, max) {

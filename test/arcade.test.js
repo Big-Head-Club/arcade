@@ -137,3 +137,20 @@ test('probe needs the page to name the game', async () => {
   assert.equal((await probeOne({ url: 'https://bad', name: 'SALT FLATS', slug: 'salt-flats' }, { fetchImpl })).status, 'down');
   assert.equal((await probeOne({ url: '', name: 'X', slug: 'x' })).status, 'workshop');
 });
+
+test('labels: a worn Game Boy label at the shell window size, with the plate inside', async () => {
+  const { labelSvg, WINDOWS } = await import('../src/labels.js');
+  const svg = labelSvg({ slug: 'salt-flats', name: 'SALT FLATS <&>', shell: 'galaxy', started: '2026-09-16', variant: "Gustavo's" }, { type: 'image/jpeg', bytes: Buffer.from('xx') });
+  assert.match(svg, new RegExp(`width="${WINDOWS.galaxy[0]}" height="${WINDOWS.galaxy[1]}"`));
+  assert.ok(svg.includes('FLATS &lt;&amp;&gt;'));   // the title wraps; the escaping holds
+  assert.ok(svg.includes('data:image/jpeg;base64,eHg='));
+  assert.ok(svg.includes("GUSTAVO'S"));
+  assert.equal(labelSvg({ slug: 'salt-flats', name: 'X', shell: 'galaxy' }, null), labelSvg({ slug: 'salt-flats', name: 'X', shell: 'galaxy' }, null));   // seeded: same label every time
+  const t = await boot({ seed: true });
+  const r = await fetch(`${t.base}/labels/patient-zero`);
+  assert.equal(r.headers.get('content-type'), 'image/svg+xml');           // no chromium in tests: the live svg
+  assert.equal((await fetch(`${t.base}/labels/patient-zero.svg?shell=whale`)).status, 200);
+  assert.equal((await fetch(`${t.base}/labels/nope`)).status, 404);
+  assert.equal((await fetch(`${t.base}/admin/registry/tok/labels.html`)).status, 200);
+  await t.close();
+});

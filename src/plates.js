@@ -1,10 +1,9 @@
 // A plate is the picture on the cartridge label. Three sources, in order:
 // the file the manifest names in the repo; a screenshot we shot ourselves;
 // a generated placeholder with the game's name on the shell's colour.
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, statSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { spawn } from 'node:child_process';
+import { withChromium, findChrome } from './chromium.js';
 
 const TYPES = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
 const SHELL_COLORS = { whale: '#2f4f6f', galaxy: '#3b2a5a', fish: '#1f6f5f', crown: '#7a5a1e', arch: '#6b3a2a', tower: '#f2812f', hare: '#8a7a5a', scarab: '#2a5a3a', moth: '#5a5a5a', lighthouse: '#a83a2a' };
@@ -23,10 +22,9 @@ export function plates({ dir, gh }) {
 
   /** Bytes + content type for a game's plate. Never throws. */
   async function get(m) {
-    // 1. the repo's own plate, refreshed daily
     if (m.plate && m.repo && gh) {
       const c = cached(m.slug);
-      if (c && c.age < 86_400_000 && !c.path.endsWith('.shot.jpg')) return { bytes: readFileSync(c.path), type: c.type };
+      if (c && c.age < 86_400_000) return { bytes: readFileSync(c.path), type: c.type };
       try {
         const f = await gh.fileOf(m.repo, m.plate);
         if (f) {
@@ -36,87 +34,43 @@ export function plates({ dir, gh }) {
         }
       } catch {}
     }
-    // 2. a screenshot we took
     const shot = join(dir, `${m.slug}.shot.jpg`);
     if (existsSync(shot)) return { bytes: readFileSync(shot), type: 'image/jpeg' };
     const c = cached(m.slug);
     if (c) return { bytes: readFileSync(c.path), type: c.type };
-    // 3. placeholder
     return { bytes: Buffer.from(placeholder(m)), type: 'image/svg+xml' };
   }
 
   function placeholder(m) {
     const bg = SHELL_COLORS[m.shell] || '#444';
-    const esc = (t) => String(t).replace(/[<&>]/g, '');
-    // Wrap the name into lines of at most 12 characters, then size the type to the longest line.
-    const words = esc(m.name).split(/\s+/).filter(Boolean);
-    const lines = [];
-    for (const w of words) {
-      const last = lines[lines.length - 1];
-      if (last !== undefined && (last + ' ' + w).length <= 12) lines[lines.length - 1] = last + ' ' + w;
-      else lines.push(w);
-    }
-    const longest = Math.max(1, ...lines.map((l) => l.length));
-    const size = Math.min(96, Math.floor(700 / (longest * 0.66)), Math.floor(360 / (lines.length * 1.15)));
-    const lh = size * 1.15;
-    const top = 315 - (lh * (lines.length - 1)) / 2;
-    const text = lines.map((l, i) => `<text x="420" y="${Math.round(top + i * lh)}" fill="#fff" font-family="ui-monospace,Menlo,monospace" font-size="${size}" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="3">${l}</text>`).join('');
-    const sub = m.variant ? esc(m.variant) : 'BIG HEAD CLUB';
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="840" height="630" viewBox="0 0 840 630"><rect width="840" height="630" fill="${bg}"/>${text}<text x="420" y="${Math.round(top + (lines.length - 1) * lh + size * 0.9 + 20)}" fill="#fff" fill-opacity=".6" font-family="ui-monospace,Menlo,monospace" font-size="22" text-anchor="middle">${sub}</text></svg>`;
+    const words = String(m.name).replace(/[<&>]/g, '').split(/\s+/);
+    const lines = []; let cur = '';
+    for (const w of words) { if ((cur + ' ' + w).trim().length > 14 && cur) { lines.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); }
+    if (cur) lines.push(cur);
+    const size = Math.min(96, Math.floor(700 / Math.max(...lines.map((l) => l.length)) / 0.66));
+    const lh = size * 1.15, top = 315 - (lh * (lines.length - 1)) / 2;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="840" height="630" viewBox="0 0 840 630"><rect width="840" height="630" fill="${bg}"/>${lines.map((l, i) => `<text x="420" y="${(top + i * lh).toFixed(0)}" fill="#fff" font-family="ui-monospace,Menlo,monospace" font-size="${size}" font-weight="700" text-anchor="middle" letter-spacing="3">${l}</text>`).join('')}<text x="420" y="${(top + lines.length * lh + 10).toFixed(0)}" fill="#fff" fill-opacity=".6" font-family="ui-monospace,Menlo,monospace" font-size="22" text-anchor="middle">${m.variant ? m.variant.replace(/[<&>]/g, '') : 'BIG HEAD CLUB'}</text></svg>`;
   }
 
   /** Screenshot every live game that has no plate of its own. Needs Chromium. */
-  async function shoot(rows, { chrome = process.env.CHROME_PATH || findChrome(), log = () => {} } = {}) {
-    if (!chrome) { log('plates: no chromium, skipping'); return 0; }
+  async function shoot(rows, { log = () => {} } = {}) {
+    if (!findChrome()) { log('plates: no chromium, skipping'); return 0; }
     const todo = rows.filter((r) => r.status === 'live' && !r.manifest.plate && !r.manifest.hidden);
     if (!todo.length) return 0;
-    const port = 9333;
-    // A fresh profile every run: a stale lock from an earlier run makes a new Chromium hand
-    // off to a browser that no longer exists and exit without opening its port.
-    const profile = mkdtempSync(join(tmpdir(), 'plates-'));
-    const proc = spawn(chrome, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-zygote', '--no-first-run', '--hide-scrollbars', '--mute-audio', `--user-data-dir=${profile}`, `--remote-debugging-port=${port}`, '--window-size=840,630', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
-    let stderr = ''; proc.stderr.on('data', (d) => { stderr += d; });
     let done = 0;
-    try {
-      // Chromium takes a few seconds to open its debug port in a small container.
-      let targets = null;
-      const t0 = Date.now();
-      for (let i = 0; i < 120 && !targets; i++) {
-        await wait(500);
-        try { targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); } catch {}
-      }
-      if (!targets) throw new Error('chromium never opened its debug port in 60s: ' + stderr.replace(/.*dbus.*\n/g, '').slice(-300));
-      log(`plates: chromium up in ${Date.now() - t0}ms, ${todo.length} to shoot`);
-      const page = targets.find((t) => t.type === 'page');
-      const ws = new WebSocket(page.webSocketDebuggerUrl);
-      await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
-      let id = 0; const pending = new Map();
-      ws.onmessage = (ev) => { const msg = JSON.parse(ev.data); if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id); } };
-      const send = (method, params = {}) => new Promise((res) => { const n = ++id; pending.set(n, res); ws.send(JSON.stringify({ id: n, method, params })); });
+    await withChromium(async (send, { wait }) => {
       await send('Emulation.setDeviceMetricsOverride', { width: 840, height: 630, deviceScaleFactor: 1, mobile: false });
-      await send('Network.enable');
-      await send('Network.setUserAgentOverride', { userAgent: 'Mozilla/5.0 (compatible; bhc-arcade-plates bot)' });   // never counted as a play
       for (const r of todo) {
         try {
           await send('Page.navigate', { url: r.manifest.url });
           await wait(5000);
           const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 80 });
-          if (shot.result?.data) { writeFileSync(join(dir, `${r.slug}.shot.jpg`), Buffer.from(shot.result.data, 'base64')); done++; }
+          if (shot?.data) { writeFileSync(join(dir, `${r.slug}.shot.jpg`), Buffer.from(shot.data, 'base64')); done++; }
         } catch (e) { log(`plates: ${r.slug}: ${e.message}`); }
       }
-      ws.close();
-    } finally {
-      proc.kill();
-      await wait(1000);
-      try { rmSync(profile, { recursive: true, force: true }); } catch {}
-    }
+    }, { log });
     return done;
   }
 
   return { get, shoot, dir };
 }
-
-function findChrome() {
-  return ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].find((p) => existsSync(p)) || null;
-}
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
