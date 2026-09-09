@@ -10,11 +10,11 @@ import { readFileSync } from 'node:fs';
 
 // Display faces for the logo (OFL, vendored in fonts/). `em` is width per character, rough, for fitting.
 const FONT_DIR = new URL('../fonts/', import.meta.url);
-const FONTS = { Anton: { file: 'Anton-Regular.ttf', em: 0.44, condensed: true }, Bangers: { file: 'Bangers-Regular.ttf', em: 0.5 }, TitanOne: { file: 'TitanOne-Regular.ttf', em: 0.66 }, Bungee: { file: 'Bungee-Regular.ttf', em: 0.8 } };
+const FONTS = { Anton: { file: 'Anton-Regular.ttf', em: 0.5, condensed: true }, Bangers: { file: 'Bangers-Regular.ttf', em: 0.58 }, TitanOne: { file: 'TitanOne-Regular.ttf', em: 0.78 }, Bungee: { file: 'Bungee-Regular.ttf', em: 0.92 } };
 const FONT_DATA = {};
 try { for (const [name, f] of Object.entries(FONTS)) FONT_DATA[name] = readFileSync(new URL(f.file, FONT_DIR)).toString('base64'); } catch {}
 
-export const RENDERER = 'label-v5';   // bump to re-render every label
+export const RENDERER = 'label-v6';   // bump to re-render every label
 
 // The printed photo window of each shell, in the cut's own pixels (hundred-carts labels.json).
 export const WINDOWS = {
@@ -33,11 +33,12 @@ function rng(seed) {
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /** Up to two lines that fit a width at a size (rough metrics for a heavy condensed face). */
-function fitTitle(name, boxW, maxSize, em = 0.56, minSize = 8) {
+function fitTitle(name, boxW, maxSize, em = 0.56, minSize = 8, maxSize2 = maxSize) {
   const words = name.toUpperCase().split(/\s+/).filter(Boolean);
   const widthOf = (s, size) => s.length * size * em;
   for (let size = maxSize; size >= minSize; size -= 1) {
     if (widthOf(name, size) <= boxW) return { lines: [name.toUpperCase()], size };
+    if (size > maxSize2) continue;   // two lines only at a size two lines can afford
     let best = null;
     for (let i = 1; i < words.length; i++) {
       const a = words.slice(0, i).join(' '), b = words.slice(i).join(' ');
@@ -85,9 +86,9 @@ export function labelSvg(g, plate, opts = {}) {
   const artH = ah - blockH;
   const fontName = g.name.replace(/\s+/g, '').length > 11 ? 'Anton' : ['Bangers', 'TitanOne', 'Bungee', 'Anton'][Math.floor(r() * 4)];
   const font = FONTS[fontName];
-  const t = fitTitle(g.name, aw * 0.9, Math.round(blockH * 0.62), font.em);
-  const lineH = t.size * 0.98;
-  const logoTop = ay + artH + (blockH - lineH * t.lines.length) / 2 - t.size * 0.05;
+  const t = fitTitle(g.name, aw * 0.9, Math.round(blockH * 0.7), font.em, 8, Math.round(blockH * 0.4));
+  const lineH = t.size * 0.95;
+  const logoTop = ay + artH + (blockH - lineH * t.lines.length) / 2;
   const logoFill = ['#ffd94a', '#ff8a3d', '#7fe3ff', '#ff6b9d', '#c8ff5a', '#ffffff'][Math.floor(r() * 6)];
   const tilt = ((r() - 0.5) * 3).toFixed(1);
 
@@ -134,8 +135,8 @@ export function labelSvg(g, plate, opts = {}) {
   <rect x="${ax}" y="${ay + artH - Math.round(h * 0.004)}" width="${aw}" height="${Math.round(h * 0.008)}" fill="${ink}" fill-opacity="0.6"/>`}
   ${ownArt ? '' : `
   <g transform="translate(${w / 2} ${logoTop}) rotate(${tilt})" text-anchor="middle" font-family="'${fontName}',Impact,'Arial Black',sans-serif" font-size="${t.size}" letter-spacing="${(t.size * (font.condensed ? 0.03 : 0.01)).toFixed(1)}">
-    ${t.lines.map((line, i) => `<text x="${(t.size * 0.06).toFixed(0)}" y="${(lineH * (i + 0.95) + t.size * 0.06).toFixed(0)}" fill="#000" fill-opacity="0.55" filter="url(#shadow)">${esc(line)}</text>`).join('')}
-    ${t.lines.map((line, i) => `<text x="0" y="${(lineH * (i + 0.95)).toFixed(0)}" fill="url(#logo)" stroke="${ink}" stroke-width="${(t.size * (font.condensed ? 0.07 : 0.09)).toFixed(1)}" stroke-linejoin="round" paint-order="stroke fill">${esc(line)}</text>`).join('')}
+    ${t.lines.map((line, i) => `<text x="${(t.size * 0.06).toFixed(0)}" y="${(lineH * i + t.size * 0.84 + t.size * 0.06).toFixed(0)}" fill="#000" fill-opacity="0.55" filter="url(#shadow)">${esc(line)}</text>`).join('')}
+    ${t.lines.map((line, i) => `<text x="0" y="${(lineH * i + t.size * 0.84).toFixed(0)}" fill="url(#logo)" stroke="${ink}" stroke-width="${(t.size * (font.condensed ? 0.07 : 0.09)).toFixed(1)}" stroke-linejoin="round" paint-order="stroke fill">${esc(line)}</text>`).join('')}
   </g>`}
   <rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" rx="${Math.round(w * 0.012)}" fill="none" stroke="${ink}" stroke-opacity="0.35" stroke-width="${Math.max(1.5, w * 0.004).toFixed(1)}"/>
   <text transform="translate(${(frame * 0.68).toFixed(0)} ${(h - frame * 1.2).toFixed(0)}) rotate(-90)" font-family="'Arial Black','Liberation Sans',Arial,sans-serif" font-weight="900" font-size="${Math.round(frame * 0.62)}" fill="${ink}" letter-spacing="${(frame * 0.03).toFixed(1)}">Big Head <tspan font-style="italic">CLUB</tspan><tspan font-size="${Math.round(frame * 0.32)}" dy="-${Math.round(frame * 0.25)}">™</tspan></text>
