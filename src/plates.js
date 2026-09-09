@@ -1,7 +1,8 @@
 // A plate is the picture on the cartridge label. Three sources, in order:
 // the file the manifest names in the repo; a screenshot we shot ourselves;
 // a generated placeholder with the game's name on the shell's colour.
-import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, statSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 
@@ -70,7 +71,10 @@ export function plates({ dir, gh }) {
     const todo = rows.filter((r) => r.status === 'live' && !r.manifest.plate && !r.manifest.hidden);
     if (!todo.length) return 0;
     const port = 9333;
-    const proc = spawn(chrome, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-zygote', '--no-first-run', '--hide-scrollbars', '--mute-audio', `--remote-debugging-port=${port}`, '--window-size=840,630', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+    // A fresh profile every run: a stale lock from an earlier run makes a new Chromium hand
+    // off to a browser that no longer exists and exit without opening its port.
+    const profile = mkdtempSync(join(tmpdir(), 'plates-'));
+    const proc = spawn(chrome, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-zygote', '--no-first-run', '--hide-scrollbars', '--mute-audio', `--user-data-dir=${profile}`, `--remote-debugging-port=${port}`, '--window-size=840,630', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = ''; proc.stderr.on('data', (d) => { stderr += d; });
     let done = 0;
     try {
@@ -99,7 +103,7 @@ export function plates({ dir, gh }) {
         } catch (e) { log(`plates: ${r.slug}: ${e.message}`); }
       }
       ws.close();
-    } finally { proc.kill(); }
+    } finally { proc.kill(); rmSync(profile, { recursive: true, force: true }); }
     return done;
   }
 
