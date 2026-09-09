@@ -126,7 +126,7 @@ export function createArcade(opts = {}) {
       }
       return send(res, 202, 'ok', 'text/plain');
     }
-    if ((m = p.match(/^\/admin\/registry\/([^/]+)(?:\/([a-z]+))?$/))) {
+    if ((m = p.match(/^\/admin\/registry\/([^/]+)(?:\/([a-z.]+))?$/))) {
       if (!adminToken || m[1] !== adminToken) return send(res, 404, 'not found', 'text/plain');
       if (m[2] === 'rescan' && req.method === 'POST') { scanOrg().catch((e) => log('rescan', e.message)); return send(res, 202, { started: true }); }
       if (m[2] === 'probe' && req.method === 'POST') { probeAll(registry).then(() => { feedCache.at = 0; }).catch((e) => log('probe', e.message)); return send(res, 202, { started: true }); }
