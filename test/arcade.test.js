@@ -144,7 +144,7 @@ test('labels: a worn Game Boy label at the shell window size, with the plate ins
   assert.match(svg, new RegExp(`width="${WINDOWS.galaxy[0]}" height="${WINDOWS.galaxy[1]}"`));
   assert.ok(svg.includes('FLATS &lt;&amp;&gt;'));   // the title wraps; the escaping holds
   assert.ok(svg.includes('data:image/jpeg;base64,eHg='));
-  assert.ok(svg.includes("GUSTAVO'S"));
+  assert.ok(svg.includes('THIS SIDE OUT'));   // the variant is told by the publisher box, which carries the designer
   assert.equal(labelSvg({ slug: 'salt-flats', name: 'X', shell: 'galaxy' }, null), labelSvg({ slug: 'salt-flats', name: 'X', shell: 'galaxy' }, null));   // seeded: same label every time
   const t = await boot({ seed: true });
   const r = await fetch(`${t.base}/labels/patient-zero`);
