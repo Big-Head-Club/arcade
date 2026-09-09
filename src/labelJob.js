@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { labelSvg, WINDOWS, RENDERER } from './labels.js';
 import { withChromium, findChrome } from './chromium.js';
 
-const SCALE = 4;   // label pixels per window pixel in the raster
+const SCALE = 3;   // label pixels per window pixel in the raster; jpeg, the window is a rectangle
 
 export function labels({ dir, plates, gh }) {
   const artCache = new Map();   // slug -> { at, art }
@@ -26,16 +26,16 @@ export function labels({ dir, plates, gh }) {
   function keyFor(m, plate) {
     return createHash('sha1').update([RENDERER, m.slug, m.name, m.shell, m.started, m.variant, plate.type, plate.bytes.length].join('|')).update(plate.bytes).digest('hex').slice(0, 12);
   }
-  function files(slug) { return readdirSync(dir).filter((f) => f.startsWith(slug + '.') && f.endsWith('.png')); }
+  function files(slug) { return readdirSync(dir).filter((f) => f.startsWith(slug + '.') && /\.(png|jpg)$/.test(f)); }
 
   /** The rendered PNG if the cache holds a current one, else the live SVG. */
   async function get(m) {
     const plate = await pictureFor(m);
     const key = keyFor(m, plate);
-    const hit = join(dir, `${m.slug}.${key}.png`);
-    if (existsSync(hit)) return { bytes: readFileSync(hit), type: 'image/png', rendered: true };
+    const hit = join(dir, `${m.slug}.${key}.jpg`);
+    if (existsSync(hit)) return { bytes: readFileSync(hit), type: 'image/jpeg', rendered: true };
     const stale = files(m.slug)[0];
-    if (stale) return { bytes: readFileSync(join(dir, stale)), type: 'image/png', rendered: true, stale: true };
+    if (stale) return { bytes: readFileSync(join(dir, stale)), type: stale.endsWith('.png') ? 'image/png' : 'image/jpeg', rendered: true, stale: true };
     return { bytes: Buffer.from(labelSvg(m, plate)), type: 'image/svg+xml', rendered: false };
   }
 
@@ -49,32 +49,34 @@ export function labels({ dir, plates, gh }) {
       if (r.manifest.hidden) continue;
       const plate = await pictureFor(r.manifest);
       const key = keyFor(r.manifest, plate);
-      if (!force && existsSync(join(dir, `${r.slug}.${key}.png`))) continue;
+      if (!force && existsSync(join(dir, `${r.slug}.${key}.jpg`))) continue;
       todo.push({ m: r.manifest, plate, key });
     }
     if (!todo.length) return 0;
     let done = 0;
     await withChromium(async ({ page, wait }) => {
       for (const { m, plate, key } of todo) {
-        let tab;
-        try {
-          tab = await page();
-          const [W, H] = WINDOWS[WINDOWS[m.shell] ? m.shell : 'hare'];
-          const w = W * SCALE, h = H * SCALE;
-          await tab.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: false });
-          await tab.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
-          const svgText = labelSvg(m, plate);
-          const html = `<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:transparent}img{display:block;width:${w}px;height:${h}px}</style><img src="data:image/svg+xml;base64,${Buffer.from(svgText).toString('base64')}">`;
-          await tab.send('Page.navigate', { url: 'data:text/html;base64,' + Buffer.from(html).toString('base64') });
-          await wait(600);
-          const shot = await tab.send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: w, height: h, scale: 1 } });
-          if (shot?.data) {
-            for (const f of files(m.slug)) unlinkSync(join(dir, f));
-            writeFileSync(join(dir, `${m.slug}.${key}.png`), Buffer.from(shot.data, 'base64'));
-            done++;
-          }
-        } catch (e) { log(`labels: ${m.slug}: ${e.message}`); }
-        finally { await tab?.close(); }
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          let tab;
+          try {
+            tab = await page();
+            const [W, H] = WINDOWS[WINDOWS[m.shell] ? m.shell : 'hare'];
+            const w = W * SCALE, h = H * SCALE;
+            await tab.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: false });
+            const svgText = labelSvg(m, plate);
+            const html = `<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:#000}img{display:block;width:${w}px;height:${h}px}</style><img src="data:image/svg+xml;base64,${Buffer.from(svgText).toString('base64')}">`;
+            await tab.send('Page.navigate', { url: 'data:text/html;base64,' + Buffer.from(html).toString('base64') });
+            await wait(700);
+            const shot = await tab.send('Page.captureScreenshot', { format: 'jpeg', quality: 84, clip: { x: 0, y: 0, width: w, height: h, scale: 1 } });
+            if (shot?.data) {
+              for (const f of files(m.slug)) unlinkSync(join(dir, f));
+              writeFileSync(join(dir, `${m.slug}.${key}.jpg`), Buffer.from(shot.data, 'base64'));
+              done++;
+            }
+            break;
+          } catch (e) { log(`labels: ${m.slug}: ${e.message}${attempt < 2 ? ', retrying' : ''}`); }
+          finally { await tab?.close(); }
+        }
       }
     }, { log });
     log(`labels: rendered ${done} of ${todo.length}`);

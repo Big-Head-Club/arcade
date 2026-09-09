@@ -7,7 +7,7 @@
 // <img>. The wear is seeded by the slug, so a label is always the same label.
 import { createHash } from 'node:crypto';
 
-export const RENDERER = 'label-v3';   // bump to re-render every label
+export const RENDERER = 'label-v4';   // bump to re-render every label
 
 // The printed photo window of each shell, in the cut's own pixels (hundred-carts labels.json).
 export const WINDOWS = {
