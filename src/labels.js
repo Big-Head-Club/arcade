@@ -14,13 +14,13 @@ const FONTS = { Anton: { file: 'Anton-Regular.ttf', em: 0.5, condensed: true }, 
 const FONT_DATA = {};
 try { for (const [name, f] of Object.entries(FONTS)) FONT_DATA[name] = readFileSync(new URL(f.file, FONT_DIR)).toString('base64'); } catch {}
 
-export const RENDERER = 'label-v7';   // bump to re-render every label
+export const RENDERER = 'label-v8';   // bump to re-render every label
 
 // The sticker on each shell, measured by hand on the cut (x0, y0, x1, y1 in the cut's own
 // pixels; cut sizes from hundred-carts art/cut). The label is drawn at the sticker's size and
 // the rack prints it there, so it covers the stock sticker edge to edge.
 export const CUTS = { arch: [262, 400], crown: [281, 400], fish: [265, 400], galaxy: [258, 400], hare: [249, 400], lighthouse: [257, 400], moth: [269, 400], scarab: [248, 400], tower: [261, 400], whale: [254, 400] };
-export const STICKERS = { arch: [40, 62, 193, 261], crown: [85, 46, 238, 218], fish: [52, 69, 208, 248], galaxy: [42, 46, 219, 312], hare: [42, 43, 206, 218], lighthouse: [44, 46, 215, 254], moth: [45, 48, 216, 260], scarab: [56, 48, 196, 227], tower: [76, 40, 217, 218], whale: [57, 53, 215, 245] };
+export const STICKERS = { arch: [38, 62, 192, 264], crown: [84, 47, 238, 215], fish: [41, 77, 213, 263], galaxy: [42, 46, 220, 314], hare: [40, 41, 206, 219], lighthouse: [44, 47, 216, 257], moth: [46, 48, 218, 260], scarab: [56, 48, 196, 227], tower: [76, 40, 218, 219], whale: [57, 54, 215, 245] };
 export const WINDOWS = Object.fromEntries(Object.entries(STICKERS).map(([k, [x0, y0, x1, y1]]) => [k, [x1 - x0, y1 - y0]]));
 /** The sticker as fractions of the cut, for anything that draws a shell and prints the label on it. */
 export function shellBoxes() {
@@ -37,6 +37,39 @@ function rng(seed) {
   return () => { a = (a + 0x6d2b79f5) >>> 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/** A picture for a label with no art yet: one of three motifs in the shell's ink, seeded. */
+function graphic(r, x, y, w, h, tone, ink) {
+  const c = (m) => `rgb(${tone.map((v) => Math.round(Math.min(1, v * m) * 255)).join(',')})`;
+  const dark = `rgb(${tone.map((v) => Math.round(v * 255 * 0.22)).join(',')})`;
+  const kind = Math.floor(r() * 3);
+  const cx = x + w * (0.3 + r() * 0.4), cy = y + h * (0.35 + r() * 0.3);
+  let body = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${dark}"/>`;
+  if (kind === 0) {
+    const rays = 14 + Math.floor(r() * 8), R = Math.hypot(w, h);
+    for (let i = 0; i < rays; i++) {
+      const a0 = (i / rays) * Math.PI * 2, a1 = ((i + 0.5) / rays) * Math.PI * 2;
+      body += `<path d="M${cx.toFixed(0)},${cy.toFixed(0)} L${(cx + Math.cos(a0) * R).toFixed(0)},${(cy + Math.sin(a0) * R).toFixed(0)} L${(cx + Math.cos(a1) * R).toFixed(0)},${(cy + Math.sin(a1) * R).toFixed(0)} Z" fill="${c(i % 2 ? 1.1 : 0.75)}"/>`;
+    }
+    body += `<circle cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" r="${(Math.min(w, h) * 0.18).toFixed(0)}" fill="#f6efe0" stroke="${ink}" stroke-width="${(w * 0.012).toFixed(1)}"/>`;
+  } else if (kind === 1) {
+    const step = Math.max(6, Math.round(w / 14));
+    for (let yy = y + step / 2; yy < y + h; yy += step) for (let xx = x + step / 2; xx < x + w; xx += step) {
+      const t = 1 - Math.hypot(xx - cx, yy - cy) / Math.hypot(w, h);
+      const rad = Math.max(0.6, t * t * step * 0.62);
+      body += `<circle cx="${xx.toFixed(0)}" cy="${yy.toFixed(0)}" r="${rad.toFixed(1)}" fill="${c(1.15)}"/>`;
+    }
+  } else {
+    const cell = Math.max(8, Math.round(w / 8));
+    const cols = Math.ceil(w / cell), rows = Math.ceil(h / cell);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      if (r() < 0.55) continue;
+      const bx = x + i * cell, by = y + j * cell;
+      body += `<rect x="${bx}" y="${by}" width="${cell}" height="${cell}" fill="${c(r() < 0.5 ? 1.1 : 0.7)}" stroke="${dark}" stroke-width="${(cell * 0.08).toFixed(1)}"/><rect x="${bx + cell * 0.12}" y="${by + cell * 0.12}" width="${cell * 0.76}" height="${cell * 0.18}" fill="#fff" fill-opacity="0.22"/>`;
+    }
+  }
+  return `<g clip-path="url(#art)">${body}</g>`;
+}
 
 /** Up to two lines that fit a width at a size (rough metrics for a heavy condensed face). */
 function fitTitle(name, boxW, maxSize, em = 0.56, minSize = 8, maxSize2 = maxSize) {
@@ -66,8 +99,8 @@ export function labelSvg(g, plate, opts = {}) {
   const scale = opts.scale || 4;
   const w = W * scale, h = H * scale;
   const r = rng(g.slug + '|label');
-  const dataUri = plate ? `data:${plate.type};base64,${plate.bytes.toString('base64')}` : '';
   const ownArt = !!(plate && plate.own);
+  const dataUri = ownArt ? `data:${plate.type};base64,${plate.bytes.toString('base64')}` : '';
   const ink = '#111';
   const frameColor = '#ece9e2';
   const designer = (g.designers && g.designers[0]) ? String(g.designers[0]).toUpperCase() : 'BIG HEAD';
@@ -135,7 +168,7 @@ export function labelSvg(g, plate, opts = {}) {
   <rect width="${w}" height="${h}" fill="${frameColor}"/>
   <rect width="${w}" height="${h}" filter="url(#grain)"/>
   <rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="#1a1612"/>
-  ${dataUri ? `<image xlink:href="${dataUri}" x="${ax}" y="${ay}" width="${aw}" height="${ownArt ? ah : artH}" preserveAspectRatio="${ownArt ? 'xMidYMid' : 'xMidYMin'} slice" clip-path="url(#art)" filter="url(#print)"/>` : ''}
+  ${ownArt ? `<image xlink:href="${dataUri}" x="${ax}" y="${ay}" width="${aw}" height="${ah}" preserveAspectRatio="xMidYMid slice" clip-path="url(#art)" filter="url(#print)"/>` : graphic(r, ax, ay, aw, artH, inkTone, ink)}
   ${ownArt ? '' : `<rect x="${ax}" y="${ay + artH}" width="${aw}" height="${blockH}" fill="${blockFill}"/>
   <rect x="${ax}" y="${ay + artH}" width="${aw}" height="${blockH}" fill="url(#stripes)"/>
   <rect x="${ax}" y="${ay + artH - Math.round(h * 0.004)}" width="${aw}" height="${Math.round(h * 0.008)}" fill="${ink}" fill-opacity="0.6"/>`}
