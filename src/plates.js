@@ -80,11 +80,13 @@ export function plates({ dir, gh }) {
     try {
       // Chromium takes a few seconds to open its debug port in a small container.
       let targets = null;
-      for (let i = 0; i < 40 && !targets; i++) {
+      const t0 = Date.now();
+      for (let i = 0; i < 120 && !targets; i++) {
         await wait(500);
         try { targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); } catch {}
       }
-      if (!targets) throw new Error('chromium never opened its debug port: ' + stderr.slice(-300));
+      if (!targets) throw new Error('chromium never opened its debug port in 60s: ' + stderr.replace(/.*dbus.*\n/g, '').slice(-300));
+      log(`plates: chromium up in ${Date.now() - t0}ms, ${todo.length} to shoot`);
       const page = targets.find((t) => t.type === 'page');
       const ws = new WebSocket(page.webSocketDebuggerUrl);
       await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
@@ -103,7 +105,11 @@ export function plates({ dir, gh }) {
         } catch (e) { log(`plates: ${r.slug}: ${e.message}`); }
       }
       ws.close();
-    } finally { proc.kill(); rmSync(profile, { recursive: true, force: true }); }
+    } finally {
+      proc.kill();
+      await wait(1000);
+      try { rmSync(profile, { recursive: true, force: true }); } catch {}
+    }
     return done;
   }
 
