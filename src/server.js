@@ -11,7 +11,7 @@ import { normalizeManifest } from './manifest.js';
 import { probeAll } from './probe.js';
 import { plates as makePlates } from './plates.js';
 import { labels as makeLabels } from './labelJob.js';
-import { WINDOWS } from './labels.js';
+import { WINDOWS, shellBoxes } from './labels.js';
 import { buildFeed, cartsShape } from './feed.js';
 import { seedManifests } from './seed.js';
 import { homePage } from './home.js';
@@ -90,6 +90,7 @@ export function createArcade(opts = {}) {
     if (p === '/health') return send(res, 200, 'ok', 'text/plain');
     if (p === '/') return send(res, 200, homePage(await feed(url.searchParams), { publicUrl }), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=60' });
     if (p === '/api/games.json') return send(res, 200, await feed(url.searchParams), undefined, { 'cache-control': 'public, max-age=60' });
+    if (p === '/api/shells.json') return send(res, 200, shellBoxes(), undefined, { 'cache-control': 'public, max-age=3600' });
     if (p === '/api/carts.json') return send(res, 200, cartsShape(await feed(url.searchParams)), undefined, { 'cache-control': 'public, max-age=60' });
     let m;
     if ((m = p.match(/^\/api\/games\/([a-z0-9-]+)\.json$/))) {

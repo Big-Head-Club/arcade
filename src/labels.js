@@ -14,13 +14,19 @@ const FONTS = { Anton: { file: 'Anton-Regular.ttf', em: 0.5, condensed: true }, 
 const FONT_DATA = {};
 try { for (const [name, f] of Object.entries(FONTS)) FONT_DATA[name] = readFileSync(new URL(f.file, FONT_DIR)).toString('base64'); } catch {}
 
-export const RENDERER = 'label-v6';   // bump to re-render every label
+export const RENDERER = 'label-v7';   // bump to re-render every label
 
-// The printed photo window of each shell, in the cut's own pixels (hundred-carts labels.json).
-export const WINDOWS = {
-  arch: [160, 208], crown: [155, 177], fish: [153, 198], galaxy: [178, 268], hare: [164, 175],
-  lighthouse: [171, 208], moth: [164, 208], scarab: [133, 180], tower: [141, 178], whale: [146, 218],
-};
+// The sticker on each shell, measured by hand on the cut (x0, y0, x1, y1 in the cut's own
+// pixels; cut sizes from hundred-carts art/cut). The label is drawn at the sticker's size and
+// the rack prints it there, so it covers the stock sticker edge to edge.
+export const CUTS = { arch: [262, 400], crown: [281, 400], fish: [265, 400], galaxy: [258, 400], hare: [249, 400], lighthouse: [257, 400], moth: [269, 400], scarab: [248, 400], tower: [261, 400], whale: [254, 400] };
+export const STICKERS = { arch: [40, 62, 193, 261], crown: [85, 46, 238, 218], fish: [52, 69, 208, 248], galaxy: [42, 46, 219, 312], hare: [42, 43, 206, 218], lighthouse: [44, 46, 215, 254], moth: [45, 48, 216, 260], scarab: [56, 48, 196, 227], tower: [76, 40, 217, 218], whale: [57, 53, 215, 245] };
+export const WINDOWS = Object.fromEntries(Object.entries(STICKERS).map(([k, [x0, y0, x1, y1]]) => [k, [x1 - x0, y1 - y0]]));
+/** The sticker as fractions of the cut, for anything that draws a shell and prints the label on it. */
+export function shellBoxes() {
+  return Object.fromEntries(Object.entries(STICKERS).map(([k, [x0, y0, x1, y1]]) => { const [W, H] = CUTS[k]; return [k, { cut: CUTS[k], sticker: STICKERS[k], box: [+(x0 / W * 100).toFixed(2), +(y0 / H * 100).toFixed(2), +((x1 - x0) / W * 100).toFixed(2), +((y1 - y0) / H * 100).toFixed(2)] }]; }));
+}
+// Each shell's plastic colour (hundred-carts art/cut/shell.json), for the poster ink and the block.
 export const SHELL_COLORS = {
   lighthouse: '#697372', hare: '#d0c1ad', crown: '#88150e', whale: '#074886', scarab: '#ca821b',
   arch: '#122d2d', galaxy: '#0e2526', moth: '#b0a4b6', tower: '#cb470d', fish: '#025761',

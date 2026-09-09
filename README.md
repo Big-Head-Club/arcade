@@ -14,6 +14,7 @@ Live at https://bhc-arcade.fly.dev.
 | `/api/games.json` | every live game, most played first. `?sort=started` for start order, `?all=1` to include workshop and down games. |
 | `/api/games/<slug>.json` | one game |
 | `/api/carts.json` | the four-field list hundred-carts reads (`s`, `n`, `u`, `a`) plus `plate`, `rank`, `plays`, `family`, `variant` |
+| `/api/shells.json` | each cartridge shell's cut size and sticker rectangle, as pixels and as percentages, for anything that prints a label on a shell |
 | `/plates/<slug>` | the label image: the repo's own plate if the manifest names one, else a nightly screenshot, else a placeholder |
 | `/hooks/github` | org webhook; a push to a default branch re-reads that repo's `cart.json` |
 | `/admin/analytics/<token>` | the tally dashboard, with a fleet table |
