@@ -3,8 +3,13 @@
 // tool with the same words and no --flags). Save the pick as art/label.png in the game's
 // repo and name it in cart.json as "label": "art/label.png"; the arcade prints it.
 //
-//   node tools/label-prompts.mjs [slug ...] > prompts.md
+//   node tools/label-prompts.mjs [slug ...] > prompts/labels.md
+//
+// The picture for each game comes from data/subjects.json (one line each, edit freely);
+// a game missing there falls back to its manifest description or tags.
+import { readFileSync } from 'node:fs';
 const ARCADE = process.env.ARCADE_URL || 'https://bhc-arcade.fly.dev';
+const subjects = JSON.parse(readFileSync(new URL('../data/subjects.json', import.meta.url), 'utf8'));
 const only = new Set(process.argv.slice(2));
 const feed = await (await fetch(`${ARCADE}/api/games.json?all=1`)).json();
 
@@ -12,6 +17,7 @@ const feed = await (await fetch(`${ARCADE}/api/games.json?all=1`)).json();
 const SUFFIX = 'illustrated key art for a 1990s handheld video game cartridge label, painted airbrush illustration, bold hand-lettered title logo integrated into the picture, saturated limited palette, faint halftone screen-print texture, slightly faded ink, portrait composition filling the frame, no border, no console, no cartridge, no photograph --ar 3:4 --style raw';
 
 const subject = (g) => {
+  if (subjects[g.slug]) return subjects[g.slug];
   const tags = (g.tags || []).filter((t) => !/^(web|solo|daily|telegram|discord|app|tool|multiplayer|head-to-head|group)$/i.test(t));
   const what = g.description || (tags.length ? tags.join(', ').toLowerCase() : 'a small strange game');
   return `${what}`;
