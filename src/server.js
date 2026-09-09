@@ -3,7 +3,7 @@
 // /hooks, /admin/registry.
 import http from 'node:http';
 import { join } from 'node:path';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { createTally } from 'tally';
 import { openRegistry } from './registry.js';
 import { github, verifySignature } from './github.js';
@@ -110,7 +110,10 @@ export function createArcade(opts = {}) {
       const man = shell && WINDOWS[shell] ? { ...row.manifest, shell } : row.manifest;
       if (m[2] === 'svg') return send(res, 200, await labels.svg(man), 'image/svg+xml', { 'cache-control': 'public, max-age=300' });
       const img = await labels.get(man);
-      return send(res, 200, img.bytes, img.type, { 'cache-control': img.rendered && !img.stale ? 'public, max-age=3600' : 'public, max-age=120' });
+      // Short cache with an etag: a re-render shows within minutes, and unchanged labels revalidate for free.
+      const etag = '"' + createHash('sha1').update(img.bytes).digest('hex').slice(0, 16) + '"';
+      if (req.headers['if-none-match'] === etag) { res.writeHead(304, { etag, 'cache-control': 'public, max-age=120' }); return res.end(); }
+      return send(res, 200, img.bytes, img.type, { 'cache-control': 'public, max-age=120', etag });
     }
     if (p === '/hooks/github' && req.method === 'POST') {
       const body = await readBody(req, 1_000_000);
