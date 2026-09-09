@@ -70,11 +70,17 @@ export function plates({ dir, gh }) {
     const todo = rows.filter((r) => r.status === 'live' && !r.manifest.plate && !r.manifest.hidden);
     if (!todo.length) return 0;
     const port = 9333;
-    const proc = spawn(chrome, ['--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--mute-audio', `--remote-debugging-port=${port}`, '--window-size=840,630', 'about:blank'], { stdio: 'ignore' });
+    const proc = spawn(chrome, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-zygote', '--no-first-run', '--hide-scrollbars', '--mute-audio', `--remote-debugging-port=${port}`, '--window-size=840,630', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+    let stderr = ''; proc.stderr.on('data', (d) => { stderr += d; });
     let done = 0;
     try {
-      await wait(1500);
-      const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+      // Chromium takes a few seconds to open its debug port in a small container.
+      let targets = null;
+      for (let i = 0; i < 40 && !targets; i++) {
+        await wait(500);
+        try { targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); } catch {}
+      }
+      if (!targets) throw new Error('chromium never opened its debug port: ' + stderr.slice(-300));
       const page = targets.find((t) => t.type === 'page');
       const ws = new WebSocket(page.webSocketDebuggerUrl);
       await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
