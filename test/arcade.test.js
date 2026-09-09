@@ -143,7 +143,9 @@ test('labels: a worn Game Boy label at the shell window size, with the plate ins
   const svg = labelSvg({ slug: 'salt-flats', name: 'SALT FLATS <&>', shell: 'galaxy', started: '2026-09-16', variant: "Gustavo's" }, { type: 'image/jpeg', bytes: Buffer.from('xx') });
   assert.match(svg, new RegExp(`width="${WINDOWS.galaxy[0]}" height="${WINDOWS.galaxy[1]}"`));
   assert.ok(svg.includes('FLATS &lt;&amp;&gt;'));   // the title wraps; the escaping holds
-  assert.ok(svg.includes('data:image/jpeg;base64,eHg='));
+  assert.ok(!svg.includes('data:image/jpeg;base64,eHg='));   // a screenshot never goes on a label
+  const own = labelSvg({ slug: 'salt-flats', name: 'SALT FLATS', shell: 'galaxy' }, { type: 'image/jpeg', bytes: Buffer.from('xx'), own: true });
+  assert.ok(own.includes('data:image/jpeg;base64,eHg='));    // the game's own art does, untouched
   assert.ok(svg.includes('THIS SIDE OUT'));   // the variant is told by the publisher box, which carries the designer
   assert.equal(labelSvg({ slug: 'salt-flats', name: 'X', shell: 'galaxy' }, null), labelSvg({ slug: 'salt-flats', name: 'X', shell: 'galaxy' }, null));   // seeded: same label every time
   const t = await boot({ seed: true });
