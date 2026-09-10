@@ -11,7 +11,7 @@ Live at https://bhc-arcade.fly.dev.
 | | |
 |---|---|
 | `/t.js`, `/i` | the analytics tag and ingest, from [tally](https://github.com/Big-Head-Club/tally). Every game loads the tag; sites are keyed by hostname. |
-| `/api/games.json` | every live game, most played first. `?sort=started` for start order, `?all=1` to include workshop and down games. |
+| `/api/games.json` | every live game, most played first. `?sort=started` for start order, `?all=1` to include workshop and down games, `?cat=spot` for one category. |
 | `/api/games/<slug>.json` | one game |
 | `/api/carts.json` | the four-field list hundred-carts reads (`s`, `n`, `u`, `a`) plus `plate`, `rank`, `plays`, `family`, `variant` |
 | `/api/shells.json` | each cartridge shell's cut size and sticker rectangle, as pixels and as percentages, for anything that prints a label on a shell |
@@ -34,6 +34,20 @@ the game's name (a 200 from an unclaimed Railway subdomain is not live).
 Status is `workshop` (no URL), `live`, or `down`.
 
 Each game carries a `platform` of mobile, desktop, or both; the feed reports `unknown` when the manifest has none.
+
+## Categories
+
+Seven, one per game, so the rack can be filtered by what kind of play it is:
+**spot** (find the one, find the difference, remember), **guess** (work it out
+from clues), **arcade** (reflexes, running, exploring), **strategy** (plan it,
+place it, solve the board), **versus** (against one or two people), **party**
+(three or more, or a group chat), **toys** (collections, creatures, and things
+that are not a contest).
+
+A game sets its own with `category` in cart.json. `src/categories.js` holds the
+answer for every game registered before the field existed, and a manifest always
+wins. The feed reports `category` per game and a count per category; the home
+page turns those into filters.
 
 Rank is `plays.week`: the number of `start` events in 7 days when the game
 sends them (one per run), otherwise engaged visitors (clicked, started, or

@@ -156,3 +156,34 @@ test('labels: a worn Game Boy label at the shell window size, with the plate ins
   assert.equal((await fetch(`${t.base}/admin/registry/tok/labels.html`)).status, 200);
   await t.close();
 });
+
+test('categories: every game gets one, the feed counts them, and cat= filters', async () => {
+  const { CATEGORIES, ASSIGNED, categoryOf } = await import('../src/categories.js');
+  assert.equal(CATEGORIES.length, 7);
+  assert.equal(Object.keys(ASSIGNED).length, 70);                       // every game registered so far
+  const ids = new Set(CATEGORIES.map((c) => c.id));
+  for (const [slug, id] of Object.entries(ASSIGNED)) assert.ok(ids.has(id), `${slug} -> ${id}`);
+  assert.equal(categoryOf({ slug: 'pawsoff' }), 'spot');                // from the map
+  assert.equal(categoryOf({ slug: 'pawsoff', category: 'party' }), 'party');   // the manifest wins
+  assert.equal(categoryOf({ slug: 'nope' }), '');
+  const { normalizeManifest } = await import('../src/manifest.js');
+  assert.equal(normalizeManifest({ slug: 'x', category: 'arcade' }).category, 'arcade');
+  assert.equal(normalizeManifest({ slug: 'x', category: 'nonsense' }).category, '');
+
+  const repos = {
+    'Big-Head-Club/a': { slug: 'a', name: 'A', url: 'https://a.test', category: 'spot' },
+    'Big-Head-Club/b': { slug: 'b', name: 'B', url: 'https://b.test', category: 'party' },
+  };
+  const t = await boot({ repos });
+  await t.arcade.scanOrg();
+  for (const s of ['a', 'b']) t.arcade.registry.setProbe(s, { status: 'live', latency: 10 });
+  const f = await (await fetch(`${t.base}/api/games.json`)).json();
+  assert.deepEqual(f.categories, { spot: 1, party: 1 });
+  const one = await (await fetch(`${t.base}/api/games.json?cat=spot`)).json();
+  assert.deepEqual(one.games.map((g) => g.slug), ['a']);
+  assert.deepEqual(one.categories, { spot: 1, party: 1 });               // counts stay whole
+  const html = await (await fetch(`${t.base}/`)).text();
+  assert.ok(html.includes('data-cat="spot"'));
+  assert.ok(html.includes('Spot it'));
+  await t.close();
+});

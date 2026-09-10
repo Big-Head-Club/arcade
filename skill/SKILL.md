@@ -29,7 +29,8 @@ Ask only about family (step 2) when it is not obvious.
   "repo": "Big-Head-Club/salt-flats",
   "plate": "art/plate.png",
   "state": "none",
-  "platform": "both"
+  "platform": "both",
+  "category": "spot"
 }
 ```
 
@@ -45,6 +46,16 @@ Fill it from git, not from questions:
 - `repo`: the GitHub repo as `Big-Head-Club/<name>`.
 - `plate`: path to a 4:3 image in the repo that shows the game, if one exists (a screenshot, key art). Leave it out otherwise; the arcade shoots one.
 - `state`: `volume` if the server writes files it must keep (a save file, SQLite). Otherwise `none`.
+- `category`: what kind of play it is. Pick exactly one:
+  - `spot` — find the one, find the difference, remember what moved
+  - `guess` — work it out from clues
+  - `arcade` — reflexes, running, dodging, exploring
+  - `strategy` — plan it, place it, solve the board
+  - `versus` — against one or two other people
+  - `party` — three or more players, or a group chat
+  - `toys` — collections, creatures, and things that are not a contest
+  Choose on what the player mostly does, not on how it is built. A daily
+  schedule is not a category; a daily spot-the-difference is `spot`.
 - `platform`: `mobile`, `desktop`, or `both`. Decide from the game itself: touch controls and a portrait layout mean mobile; keyboard, mouse, or a wide canvas mean desktop; a responsive layout that plays well on either means both. Always set it.
 - Optional: `shell` picks the cartridge colour (whale, galaxy, fish, crown, arch, tower, hare, scarab, moth, lighthouse); `probe` is a string the live page contains if the title does not; `description` is one sentence; `hidden: true` keeps it off the rack.
 

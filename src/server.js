@@ -70,9 +70,10 @@ export function createArcade(opts = {}) {
   async function feed(q) {
     const includeAll = q.get('all') === '1';
     const sort = q.get('sort') === 'started' ? 'started' : 'plays';
-    const key = `${includeAll}|${sort}`;
+    const cat = q.get('cat') || '';
+    const key = `${includeAll}|${sort}|${cat}`;
     if (feedCache.key === key && Date.now() - feedCache.at < 60_000) return feedCache.value;
-    const value = await buildFeed(registry, tally, { includeAll, sort });
+    const value = await buildFeed(registry, tally, { includeAll, sort, cat });
     feedCache = { at: Date.now(), key, value };
     return value;
   }

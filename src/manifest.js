@@ -1,3 +1,4 @@
+import { CATEGORY_IDS } from './categories.js';
 // cart.json: the one file a game repo carries so the fleet knows about it.
 export const SHELLS = ['whale', 'galaxy', 'fish', 'crown', 'arch', 'tower', 'hare', 'scarab', 'moth', 'lighthouse'];
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -36,6 +37,7 @@ export function normalizeManifest(raw, { repo } = {}) {
     site: str(raw.site, 120).toLowerCase() || (url ? new URL(url).hostname.toLowerCase() : ''),
     shell, state,
     platform: ['mobile', 'desktop', 'both'].includes(raw.platform) ? raw.platform : '',
+    category: CATEGORY_IDS.includes(raw.category) ? raw.category : '',
     description: str(raw.description, 300),
     hidden: raw.hidden === true,
   };
