@@ -14,7 +14,7 @@ const FONTS = { Anton: { file: 'Anton-Regular.ttf', em: 0.5, condensed: true }, 
 const FONT_DATA = {};
 try { for (const [name, f] of Object.entries(FONTS)) FONT_DATA[name] = readFileSync(new URL(f.file, FONT_DIR)).toString('base64'); } catch {}
 
-export const RENDERER = 'label-v8';   // bump to re-render every label
+export const RENDERER = 'label-v9';   // bump to re-render every label
 
 // The sticker on each shell, measured by hand on the cut (x0, y0, x1, y1 in the cut's own
 // pixels; cut sizes from hundred-carts art/cut). The label is drawn at the sticker's size and
@@ -96,11 +96,13 @@ function fitTitle(name, boxW, maxSize, em = 0.56, minSize = 8, maxSize2 = maxSiz
 export function labelSvg(g, plate, opts = {}) {
   const shell = WINDOWS[g.shell] ? g.shell : 'hare';
   const [W, H] = WINDOWS[shell];
-  const scale = opts.scale || 4;
+  const scale = opts.scale || 8;   // label pixels per sticker pixel: crisp on a retina rack
   const w = W * scale, h = H * scale;
   const r = rng(g.slug + '|label');
   const ownArt = !!(plate && plate.own);
-  const dataUri = ownArt ? `data:${plate.type};base64,${plate.bytes.toString('base64')}` : '';
+  // The picture is the game: its own art if it has any, otherwise its screen printed as a
+  // two-ink poster. A generated graphic is the last resort, for a game with no picture at all.
+  const dataUri = plate ? `data:${plate.type};base64,${plate.bytes.toString('base64')}` : '';
   const ink = '#111';
   const frameColor = '#ece9e2';
   const designer = (g.designers && g.designers[0]) ? String(g.designers[0]).toUpperCase() : 'BIG HEAD';
@@ -168,7 +170,9 @@ export function labelSvg(g, plate, opts = {}) {
   <rect width="${w}" height="${h}" fill="${frameColor}"/>
   <rect width="${w}" height="${h}" filter="url(#grain)"/>
   <rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="#1a1612"/>
-  ${ownArt ? `<image xlink:href="${dataUri}" x="${ax}" y="${ay}" width="${aw}" height="${ah}" preserveAspectRatio="xMidYMid slice" clip-path="url(#art)" filter="url(#print)"/>` : graphic(r, ax, ay, aw, artH, inkTone, ink)}
+  ${dataUri
+    ? `<image xlink:href="${dataUri}" x="${ax}" y="${ay}" width="${aw}" height="${ownArt ? ah : artH}" preserveAspectRatio="${ownArt ? 'xMidYMid' : 'xMidYMin'} slice" clip-path="url(#art)" filter="url(#print)"/>`
+    : graphic(r, ax, ay, aw, artH, inkTone, ink)}
   ${ownArt ? '' : `<rect x="${ax}" y="${ay + artH}" width="${aw}" height="${blockH}" fill="${blockFill}"/>
   <rect x="${ax}" y="${ay + artH}" width="${aw}" height="${blockH}" fill="url(#stripes)"/>
   <rect x="${ax}" y="${ay + artH - Math.round(h * 0.004)}" width="${aw}" height="${Math.round(h * 0.008)}" fill="${ink}" fill-opacity="0.6"/>`}
