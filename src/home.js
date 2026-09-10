@@ -29,7 +29,7 @@ nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
 .chip.on{background:#f2812f;border-color:#f2812f;color:#1c1a17}
 .chip i{font-style:normal;opacity:.6;font-size:11px;margin-left:2px}
 .chip.on i{opacity:.75}
-ol{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:20px}li a{display:block;color:inherit;text-decoration:none}li img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:2px;background:transparent;display:block;margin-bottom:8px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.55))}li b{display:block;font-size:14px}li span{color:#9a9184;font-size:12px}
+ol{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:20px}li a{display:block;color:inherit;text-decoration:none}li img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:2px;background:transparent;display:block;margin-bottom:8px;box-shadow:0 6px 14px -6px rgba(0,0,0,.7)}li b{display:block;font-size:14px}li span{color:#9a9184;font-size:12px}
 li[hidden]{display:none}
 #empty{color:#9a9184}</style></head>
 <body><main><h1>Big Head Club arcade</h1>
