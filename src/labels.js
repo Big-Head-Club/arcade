@@ -14,13 +14,13 @@ const FONTS = { Anton: { file: 'Anton-Regular.ttf', em: 0.5, condensed: true }, 
 const FONT_DATA = {};
 try { for (const [name, f] of Object.entries(FONTS)) FONT_DATA[name] = readFileSync(new URL(f.file, FONT_DIR)).toString('base64'); } catch {}
 
-export const RENDERER = 'label-v9';   // bump to re-render every label
+export const RENDERER = 'label-v10';   // bump to re-render every label
 
 // The sticker on each shell, measured by hand on the cut (x0, y0, x1, y1 in the cut's own
 // pixels; cut sizes from hundred-carts art/cut). The label is drawn at the sticker's size and
 // the rack prints it there, so it covers the stock sticker edge to edge.
 export const CUTS = { arch: [262, 400], crown: [281, 400], fish: [265, 400], galaxy: [258, 400], hare: [249, 400], lighthouse: [257, 400], moth: [269, 400], scarab: [248, 400], tower: [261, 400], whale: [254, 400] };
-export const STICKERS = { arch: [38, 62, 192, 264], crown: [84, 47, 238, 215], fish: [41, 77, 213, 263], galaxy: [42, 46, 220, 314], hare: [40, 41, 206, 219], lighthouse: [44, 47, 216, 257], moth: [46, 48, 218, 260], scarab: [56, 48, 196, 227], tower: [76, 40, 218, 219], whale: [57, 54, 215, 245] };
+export const STICKERS = { arch: [37, 61, 194, 265], crown: [83, 45, 244, 217], fish: [40, 76, 217, 264], galaxy: [41, 45, 223, 315], hare: [39, 40, 208, 220], lighthouse: [43, 46, 219, 258], moth: [44, 46, 230, 264], scarab: [54, 45, 208, 230], tower: [75, 39, 221, 220], whale: [56, 53, 218, 246] };
 export const WINDOWS = Object.fromEntries(Object.entries(STICKERS).map(([k, [x0, y0, x1, y1]]) => [k, [x1 - x0, y1 - y0]]));
 /** The sticker as fractions of the cut, for anything that draws a shell and prints the label on it. */
 export function shellBoxes() {
