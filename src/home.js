@@ -50,8 +50,12 @@ li[hidden]{display:none}
     window.tally && tally('filter', { cat: cat });
   }
   nav.addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) show(b.dataset.cat); });
-  var hash = location.hash.slice(1);
-  if (hash && nav.querySelector('.chip[data-cat="' + hash + '"]')) show(hash);
+  function fromHash() {
+    var h = location.hash.slice(1);
+    show(h && nav.querySelector('.chip[data-cat="' + h + '"]') ? h : 'all');
+  }
+  addEventListener('hashchange', fromHash);
+  if (location.hash.slice(1)) fromHash();
 })();
 </script>
 <script defer src="/t.js"></script>
