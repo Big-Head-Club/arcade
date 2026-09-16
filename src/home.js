@@ -19,11 +19,16 @@ export function homePage(feed, { publicUrl = '' } = {}) {
       g.variant ? esc(g.variant) : '',
       g.designers.length ? esc(g.designers.join(', ')) : '',
     ].filter(Boolean).join(' · ');
-    return `<li data-cat="${esc(g.category || 'none')}"><a href="${esc(g.url)}"><img src="/labels/${esc(g.slug)}" alt="" loading="lazy"><b>${esc(g.name)}</b></a><span>${meta}</span></li>`;
+    return `<li data-cat="${esc(g.category || 'none')}" data-started="${esc(g.started || '')}" data-rank="${g.rank}"><a href="${esc(g.url)}"><img src="/labels/${esc(g.slug)}" alt="" loading="lazy"><b>${esc(g.name)}</b></a><span>${meta}</span></li>`;
   }).join('\n');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Big Head Club arcade</title>
 <style>body{margin:0;background:#1c1a17;color:#e8e2d8;font:16px/1.5 ui-monospace,Menlo,monospace;padding:32px 20px}main{max-width:1100px;margin:0 auto}h1{font-size:20px;margin:0 0 4px}p{color:#9a9184;margin:0 0 16px}
-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+#sorts{color:#9a9184;font-size:13px;margin:0 0 22px;display:flex;align-items:center;gap:6px}
+#sorts span{opacity:.5}
+.sort{font:inherit;font-size:13px;color:#9a9184;background:none;border:0;padding:2px 0;cursor:pointer;border-bottom:1px solid transparent}
+.sort:hover{color:#e8e2d8}
+.sort.on{color:#f2812f;border-bottom-color:#f2812f}
 .chip{font:inherit;font-size:13px;color:#e8e2d8;background:#26231f;border:1px solid #3a352f;border-radius:999px;padding:5px 13px;cursor:pointer}
 .chip:hover{border-color:#6a6258}
 .chip.on{background:#f2812f;border-color:#f2812f;color:#1c1a17}
@@ -36,28 +41,53 @@ footer{margin:48px 0 0;padding-top:16px;border-top:1px solid #3a352f;color:#9a91
 <body><main><h1>Big Head Club arcade</h1>
 <p>${feed.count} games, most played first. A play is a run where the game reports runs, otherwise a visitor who clicked, started, or stayed ten seconds; crawlers never count. <a style="color:#f2812f" href="/api/games.json">feed</a></p>
 <nav id="filters">${chips}</nav>
+<div id="sorts">Sort <button class="sort on" data-sort="plays">most played</button><span>·</span><button class="sort" data-sort="new">newest</button></div>
 <ol id="games">${rows}</ol>
 <p id="empty" hidden>Nothing in that one yet.</p>
 <footer>Big Head Club, published by Merchants of Play Inc. · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
 </main>
 <script>
 (function () {
-  var nav = document.getElementById('filters'), items = document.querySelectorAll('#games li'), empty = document.getElementById('empty');
-  function show(cat) {
+  var nav = document.getElementById('filters'), sorts = document.getElementById('sorts');
+  var list = document.getElementById('games'), empty = document.getElementById('empty');
+  var items = [].slice.call(list.children);
+  var cat = 'all', order = 'plays';
+
+  function render() {
     var n = 0;
     items.forEach(function (li) { var on = cat === 'all' || li.dataset.cat === cat; li.hidden = !on; if (on) n++; });
     empty.hidden = n > 0;
+    var sorted = items.slice().sort(order === 'new'
+      ? function (a, b) { return (b.dataset.started || '').localeCompare(a.dataset.started || '') || a.dataset.rank - b.dataset.rank; }
+      : function (a, b) { return a.dataset.rank - b.dataset.rank; });
+    sorted.forEach(function (li) { list.appendChild(li); });
     nav.querySelectorAll('.chip').forEach(function (b) { b.classList.toggle('on', b.dataset.cat === cat); });
-    history.replaceState(null, '', cat === 'all' ? location.pathname : '#' + cat);
-    window.tally && tally('filter', { cat: cat });
+    sorts.querySelectorAll('.sort').forEach(function (b) { b.classList.toggle('on', b.dataset.sort === order); });
   }
-  nav.addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) show(b.dataset.cat); });
+  function write() {
+    var h = cat === 'all' && order === 'plays' ? '' : order === 'plays' ? '#' + cat : '#cat=' + cat + '&sort=' + order;
+    history.replaceState(null, '', h || location.pathname);
+  }
+  function set(next) {
+    if (next.cat !== undefined) cat = next.cat;
+    if (next.sort !== undefined) order = next.sort;
+    render(); write();
+    window.tally && tally('browse', { cat: cat, sort: order });
+  }
+  nav.addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) set({ cat: b.dataset.cat }); });
+  sorts.addEventListener('click', function (e) { var b = e.target.closest('.sort'); if (b) set({ sort: b.dataset.sort }); });
+
   function fromHash() {
-    var h = location.hash.slice(1);
-    show(h && nav.querySelector('.chip[data-cat="' + h + '"]') ? h : 'all');
+    var h = location.hash.slice(1), c = 'all', o = 'plays';
+    if (h.indexOf('=') >= 0) {
+      var q = new URLSearchParams(h);
+      c = q.get('cat') || 'all'; o = q.get('sort') === 'new' ? 'new' : 'plays';
+    } else if (h) { c = h; }
+    if (c !== 'all' && !nav.querySelector('.chip[data-cat="' + c + '"]')) c = 'all';
+    cat = c; order = o; render();
   }
   addEventListener('hashchange', fromHash);
-  if (location.hash.slice(1)) fromHash();
+  if (location.hash.slice(1)) fromHash(); else render();
 })();
 </script>
 <script defer src="/t.js"></script>

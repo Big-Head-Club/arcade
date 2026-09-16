@@ -185,6 +185,10 @@ test('categories: every game gets one, the feed counts them, and cat= filters', 
   const html = await (await fetch(`${t.base}/`)).text();
   assert.ok(html.includes('data-cat="spot"'));
   assert.ok(html.includes('Spot it'));
+  assert.ok(html.includes('data-sort="new"'));            // the recency sort is offered
+  assert.ok(html.includes('data-started='));               // and each tile carries the date it sorts on
+  const byDate = await (await fetch(`${t.base}/api/games.json?sort=started`)).json();
+  assert.equal(byDate.sort, 'started');
   await t.close();
 });
 
