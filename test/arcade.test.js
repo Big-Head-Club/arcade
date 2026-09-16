@@ -187,3 +187,23 @@ test('categories: every game gets one, the feed counts them, and cat= filters', 
   assert.ok(html.includes('Spot it'));
   await t.close();
 });
+
+test('terms and privacy are served, and say what we actually do', async () => {
+  const t = await boot({ seed: true });
+  const terms = await fetch(`${t.base}/terms`);
+  assert.equal(terms.status, 200);
+  const tHtml = await terms.text();
+  assert.match(tHtml, /Terms of Service/);
+  assert.match(tHtml, /Merchants of Play Inc\./);
+  assert.match(tHtml, /British Columbia/);
+  const priv = await (await fetch(`${t.base}/privacy`)).text();
+  assert.match(priv, /Privacy Policy/);
+  assert.match(priv, /We set no cookies/);
+  assert.match(priv, /\?tally=ignore/);            // the opt-out is on the page
+  assert.match(priv, /fonts/i);                    // the one third party we do load
+  assert.ok(!/we may share your information with our advertising partners/i.test(priv));
+  const home = await (await fetch(`${t.base}/`)).text();
+  assert.match(home, /href="\/terms"/);
+  assert.match(home, /href="\/privacy"/);
+  await t.close();
+});

@@ -15,6 +15,7 @@ import { WINDOWS, shellBoxes } from './labels.js';
 import { buildFeed, cartsShape } from './feed.js';
 import { seedManifests } from './seed.js';
 import { homePage } from './home.js';
+import { termsPage, privacyPage } from './legal.js';
 
 export function createArcade(opts = {}) {
   const dataDir = opts.dataDir || process.env.DATA_DIR || './data';
@@ -89,6 +90,8 @@ export function createArcade(opts = {}) {
     const p = url.pathname.replace(/\/$/, '') || '/';
 
     if (p === '/health') return send(res, 200, 'ok', 'text/plain');
+    if (p === '/terms') return send(res, 200, termsPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
+    if (p === '/privacy') return send(res, 200, privacyPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
     if (p === '/') return send(res, 200, homePage(await feed(url.searchParams), { publicUrl }), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=60' });
     if (p === '/api/games.json') return send(res, 200, await feed(url.searchParams), undefined, { 'cache-control': 'public, max-age=60' });
     if (p === '/api/shells.json') return send(res, 200, shellBoxes(), undefined, { 'cache-control': 'public, max-age=3600' });

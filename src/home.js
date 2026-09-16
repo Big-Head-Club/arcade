@@ -31,12 +31,14 @@ nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
 .chip.on i{opacity:.75}
 ol{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:20px}li a{display:block;color:inherit;text-decoration:none}li img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:2px;background:transparent;display:block;margin-bottom:8px;box-shadow:0 6px 14px -6px rgba(0,0,0,.7)}li b{display:block;font-size:14px}li span{color:#9a9184;font-size:12px}
 li[hidden]{display:none}
-#empty{color:#9a9184}</style></head>
+#empty{color:#9a9184}
+footer{margin:48px 0 0;padding-top:16px;border-top:1px solid #3a352f;color:#9a9184;font-size:12px}footer a{color:#9a9184}footer a:hover{color:#f2812f}</style></head>
 <body><main><h1>Big Head Club arcade</h1>
 <p>${feed.count} games, most played first. A play is a run where the game reports runs, otherwise a visitor who clicked, started, or stayed ten seconds; crawlers never count. <a style="color:#f2812f" href="/api/games.json">feed</a></p>
 <nav id="filters">${chips}</nav>
 <ol id="games">${rows}</ol>
 <p id="empty" hidden>Nothing in that one yet.</p>
+<footer>Big Head Club, published by Merchants of Play Inc. · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
 </main>
 <script>
 (function () {
