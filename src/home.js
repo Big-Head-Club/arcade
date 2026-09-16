@@ -39,7 +39,7 @@ li[hidden]{display:none}
 #empty{color:#9a9184}
 footer{margin:48px 0 0;padding-top:16px;border-top:1px solid #3a352f;color:#9a9184;font-size:12px}footer a{color:#9a9184}footer a:hover{color:#f2812f}</style></head>
 <body><main><h1>Big Head Club arcade</h1>
-<p>${feed.count} games. <a style="color:#f2812f" href="/api/games.json">feed</a></p>
+<p>${feed.count} games.</p>
 <nav id="filters">${chips}</nav>
 <div id="sorts">Sort <button class="sort on" data-sort="plays">most played</button><span>·</span><button class="sort" data-sort="new">newest</button></div>
 <ol id="games">${rows}</ol>
