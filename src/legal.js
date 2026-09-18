@@ -8,7 +8,7 @@ export const LEGAL = {
   email: 'officialstuff@merchantsofplay.com',
   law: 'British Columbia, Canada',
   courts: 'Vancouver, British Columbia, Canada',
-  updated: 'September 16, 2026',
+  updated: 'September 18, 2026',
   sites: ['bhc-arcade.fly.dev', 'bhc-rack.fly.dev', 'bhc-hundred-days.fly.dev'],
 };
 
@@ -111,7 +111,7 @@ const PRIVACY = [
   ['Who else sees it', [
     'Nobody buys it, and we do not share it with advertisers or data brokers.',
     'Our analytics data sits on our own servers. The companies that host those servers can necessarily store it for us: Fly.io and Railway, in the United States. Some games keep saved data in a hosted Postgres database (Neon).',
-    'The hundred-days calendar loads a web font from Google Fonts, so Google receives your IP address when that page loads, and it embeds a YouTube player only after you press play, at which point YouTube may set its own cookies. Both are governed by Google’s privacy policy, not ours.',
+    'The hundred-days calendar loads a web font from Google Fonts, so Google receives your IP address when that page loads. The arcade and the calendar load an embedded YouTube player only after you press play, at which point YouTube may set its own cookies. Both are governed by Google’s privacy policy, not ours.',
     'We may disclose information if the law requires it, or to protect our rights or someone’s safety.',
   ]],
   ['Cookies', [

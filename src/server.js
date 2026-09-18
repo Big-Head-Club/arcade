@@ -16,6 +16,10 @@ import { buildFeed, cartsShape } from './feed.js';
 import { seedManifests } from './seed.js';
 import { homePage } from './home.js';
 import { termsPage, privacyPage } from './legal.js';
+import { readFileSync } from 'node:fs';
+
+// The intro video's thumbnail, served from here so the page asks YouTube for nothing until someone presses play.
+const INTRO_JPG = readFileSync(new URL('../assets/intro.jpg', import.meta.url));
 
 export function createArcade(opts = {}) {
   const dataDir = opts.dataDir || process.env.DATA_DIR || './data';
@@ -90,6 +94,7 @@ export function createArcade(opts = {}) {
     const p = url.pathname.replace(/\/$/, '') || '/';
 
     if (p === '/health') return send(res, 200, 'ok', 'text/plain');
+    if (p === '/intro.jpg') return send(res, 200, INTRO_JPG, 'image/jpeg', { 'cache-control': 'public, max-age=86400' });
     if (p === '/terms') return send(res, 200, termsPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
     if (p === '/privacy') return send(res, 200, privacyPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
     if (p === '/') return send(res, 200, homePage(await feed(url.searchParams), { publicUrl }), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=60' });
