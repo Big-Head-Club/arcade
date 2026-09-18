@@ -23,7 +23,7 @@ export function homePage(feed, { publicUrl = '' } = {}) {
   }).join('\n');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Big Head Club arcade</title>
 <style>body{margin:0;background:#1c1a17;color:#e8e2d8;font:16px/1.5 ui-monospace,Menlo,monospace;padding:32px 20px}main{max-width:1100px;margin:0 auto}h1{font-size:20px;margin:0 0 4px}p{color:#9a9184;margin:0 0 16px}
-#intro{display:block;position:relative;width:100%;max-width:760px;aspect-ratio:16/9;margin:4px 0 24px;padding:0;border:0;border-radius:6px;overflow:hidden;background:#000;cursor:pointer}
+#intro{display:block;position:relative;width:100%;max-width:760px;aspect-ratio:16/9;margin:4px auto 24px;padding:0;border:0;border-radius:6px;overflow:hidden;background:#000;cursor:pointer}
 #intro img,#intro iframe{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
 #intro i{position:absolute;left:50%;top:50%;width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;background:#f2812f;box-shadow:0 4px 18px rgba(0,0,0,.5);transition:transform .15s}
 #intro i::after{content:"";position:absolute;left:27px;top:21px;border-style:solid;border-width:13px 0 13px 21px;border-color:transparent transparent transparent #1c1a17}
