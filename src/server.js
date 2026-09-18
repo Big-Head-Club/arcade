@@ -170,7 +170,15 @@ export function createArcade(opts = {}) {
     adminToken = tally.token || tally.dashboardUrl('').split('/').pop();
     if (opts.jobs !== false) {
       probeAll(registry).then(() => { feedCache.at = 0; }).catch((e) => log('probe', e.message));
-      timers.push(setInterval(() => probeAll(registry).then(() => { feedCache.at = 0; }).catch((e) => log('probe', e.message)), 10 * 60_000));
+      // Once a day, not every ten minutes. Most of the games live on Railway
+      // with app sleeping on, and Railway sleeps a service after ten idle
+      // minutes — so a ten-minute probe woke every game the moment it dozed
+      // off. For ten days each one restarted at :07, :17, :27 and billed
+      // memory around the clock; the sleep setting saved nothing. A game that
+      // is down shows as down a day late, which is fine for a games shelf.
+      // POST /admin/registry/<token>/probe still checks on demand.
+      const probeHours = Number(process.env.PROBE_HOURS || 24);
+      timers.push(setInterval(() => probeAll(registry).then(() => { feedCache.at = 0; }).catch((e) => log('probe', e.message)), probeHours * 3_600_000));
       timers.push(setInterval(() => { feedCache.at = 0; }, 2 * 60_000));
       const sinceScan = Date.now() - Number(registry.meta('lastScan') || 0);
       if (sinceScan > 6 * 3_600_000) setTimeout(() => scanOrg().catch((e) => log('scan', e.message)), 5_000);
