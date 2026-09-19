@@ -29,6 +29,7 @@ export function homePage(feed, { publicUrl = '' } = {}) {
 #intro i::after{content:"";position:absolute;left:27px;top:21px;border-style:solid;border-width:13px 0 13px 21px;border-color:transparent transparent transparent #1c1a17}
 #intro:hover i{transform:scale(1.08)}
 nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.pages{gap:18px;font-size:13px;margin:0 0 18px}.pages a{color:#9a9184;text-decoration:none;border-bottom:1px solid transparent}.pages a:hover{color:#e8e2d8}.pages a[aria-current]{color:#f2812f;border-bottom-color:#f2812f}
 #sorts{color:#9a9184;font-size:13px;margin:0 0 22px;display:flex;align-items:center;gap:6px}
 #sorts span{opacity:.5}
 .sort{font:inherit;font-size:13px;color:#9a9184;background:none;border:0;padding:2px 0;cursor:pointer;border-bottom:1px solid transparent}
@@ -43,14 +44,14 @@ ol{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(
 li[hidden]{display:none}
 #empty{color:#9a9184}
 footer{margin:48px 0 0;padding-top:16px;border-top:1px solid #3a352f;color:#9a9184;font-size:12px}footer a{color:#9a9184}footer a:hover{color:#f2812f}</style></head>
-<body><main><h1>Big Head Club arcade</h1>
+<body><main><nav class="pages" aria-label="Pages"><a href="/" aria-current="page">Games</a><a href="/resources">Resources</a></nav><h1>Big Head Club arcade</h1>
 <p>${feed.count} games.</p>
 <button id="intro" aria-label="Play 100 Games in 100 Days"><img src="/intro.jpg" alt=""><i></i></button>
 <nav id="filters">${chips}</nav>
 <div id="sorts">Sort <button class="sort on" data-sort="plays">most played</button><span>·</span><button class="sort" data-sort="new">newest</button></div>
 <ol id="games">${rows}</ol>
 <p id="empty" hidden>Nothing in that one yet.</p>
-<footer>Big Head Club, published by Merchants of Play Inc. · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
+<footer>Big Head Club, published by Merchants of Play Inc. · <a href="/resources">Resources</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
 </main>
 <script>
 (function () {

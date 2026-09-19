@@ -16,6 +16,7 @@ import { buildFeed, cartsShape } from './feed.js';
 import { seedManifests } from './seed.js';
 import { homePage } from './home.js';
 import { termsPage, privacyPage } from './legal.js';
+import { resourcesPage } from './resources.js';
 import { readFileSync } from 'node:fs';
 
 // The intro video's thumbnail, served from here so the page asks YouTube for nothing until someone presses play.
@@ -97,6 +98,7 @@ export function createArcade(opts = {}) {
     if (p === '/intro.jpg') return send(res, 200, INTRO_JPG, 'image/jpeg', { 'cache-control': 'public, max-age=86400' });
     if (p === '/terms') return send(res, 200, termsPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
     if (p === '/privacy') return send(res, 200, privacyPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
+    if (p === '/resources') return send(res, 200, resourcesPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=600' });
     if (p === '/') return send(res, 200, homePage(await feed(url.searchParams), { publicUrl }), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=60' });
     if (p === '/api/games.json') return send(res, 200, await feed(url.searchParams), undefined, { 'cache-control': 'public, max-age=60' });
     if (p === '/api/shells.json') return send(res, 200, shellBoxes(), undefined, { 'cache-control': 'public, max-age=3600' });

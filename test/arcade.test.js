@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createHmac } from 'node:crypto';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createArcade } from '../src/server.js';
@@ -209,5 +209,21 @@ test('terms and privacy are served, and say what we actually do', async () => {
   const home = await (await fetch(`${t.base}/`)).text();
   assert.match(home, /href="\/terms"/);
   assert.match(home, /href="\/privacy"/);
+  await t.close();
+});
+
+test('resources is the second page: every link from the list, linked both ways with the games', async () => {
+  const t = await boot({ seed: true });
+  const res = await fetch(`${t.base}/resources`);
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  const data = JSON.parse(readFileSync(new URL('../src/resources.json', import.meta.url), 'utf8'));
+  for (const s of data.sections) {
+    assert.ok(html.includes(s.heading), `section ${s.heading}`);
+    for (const it of s.items) if (!s.notes) assert.ok(html.includes(`href="${it.url.replace(/&/g, '&amp;')}"`), `link ${it.name}`);
+  }
+  assert.match(html, /href="\/"/);                 // back to the games
+  const home = await (await fetch(`${t.base}/`)).text();
+  assert.match(home, /href="\/resources"/);
   await t.close();
 });

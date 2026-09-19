@@ -1,0 +1,610 @@
+{
+  "title": "Resources",
+  "intro": "What the hundred games are built with, what we reach for next, and where to look if you want to see how.",
+  "sections": [
+    {
+      "heading": "THE PROJECT",
+      "items": [
+        {
+          "name": "Build Ledger",
+          "url": "https://build-ledger-production.up.railway.app/",
+          "note": "Every project, measured from its own git history. Days, commits, lines, what is live."
+        },
+        {
+          "name": "Relay",
+          "url": "https://relay-production-0b77.up.railway.app/",
+          "note": "The house template for daily link-first games. Two files of game, everything else built in."
+        },
+        {
+          "name": "Silly Ninjas art",
+          "url": "https://silly-ninjas-production.up.railway.app/",
+          "note": "Every sheet in the Silly Ninjas kit: the five ninjas with their poses and emotes, and ten worlds of props, ground and cast. Shared by Silly Ninja Defense and Silly Ninja Squares."
+        },
+        {
+          "name": "The tray",
+          "url": "https://hundred-carts-production.up.railway.app/bar.js",
+          "note": "One script tag gives any game EJECT and SUBSCRIBE. It renders in a shadow root so it looks the same in every codebase and touches none of them."
+        },
+        {
+          "name": "The pad",
+          "url": "https://hundred-carts-production.up.railway.app/pad.js",
+          "note": "One script tag and a PlayStation controller plays a game that was written for a mouse. It sends arrow keys, falls back to WASD, then to walking the buttons on screen, then to a drawn cursor that clicks — whichever the game turns out to want."
+        }
+      ]
+    },
+    {
+      "heading": "THE PEOPLE",
+      "notes": true,
+      "items": [
+        {
+          "name": "Dan Viau",
+          "note": "Built tally, the analytics in every game, and the Zen redesign of Hex Smash that became the house look. Also the arcade hub and Hex Smash Ninja."
+        },
+        {
+          "name": "Gustavo Konrad",
+          "note": "Rebuilt Lore Wars and BREACH on Solid, and built Wizard Battle and Overland."
+        }
+      ]
+    },
+    {
+      "heading": "BUILT WITH",
+      "items": [
+        {
+          "name": "Claude Code",
+          "url": "https://claude.com/claude-code",
+          "note": "Every game on the shelf was built with it.",
+          "by": "Anthropic"
+        },
+        {
+          "name": "Railway",
+          "url": "https://railway.com/",
+          "note": "Where the games are hosted."
+        },
+        {
+          "name": "Neon",
+          "url": "https://neon.com/",
+          "note": "Postgres for the games that keep state."
+        },
+        {
+          "name": "Midjourney",
+          "url": "https://www.midjourney.com/",
+          "note": "The cartridge photographs, and most of the game art."
+        },
+        {
+          "name": "three.js",
+          "url": "https://threejs.org/",
+          "note": "The 3D games: crowds, apartment towers, zombies.",
+          "by": "mrdoob and contributors"
+        },
+        {
+          "name": "Porkbun",
+          "url": "https://porkbun.com/",
+          "note": "Domains."
+        }
+      ]
+    },
+    {
+      "heading": "ENGINES AND LIBRARIES",
+      "items": [
+        {
+          "name": "PixiJS",
+          "url": "https://pixijs.com/",
+          "note": "Fast 2D rendering on WebGL and WebGPU. The hex games draw with it."
+        },
+        {
+          "name": "Phaser",
+          "url": "https://phaser.io/",
+          "note": "A full 2D game framework with scenes, physics, input and loaders, for games that outgrow a canvas and a loop."
+        },
+        {
+          "name": "KAPLAY",
+          "url": "https://kaplayjs.com/",
+          "note": "A small, friendly 2D library for prototypes that need to be playable in an hour."
+        },
+        {
+          "name": "Rapier",
+          "url": "https://rapier.rs/",
+          "note": "Deterministic 2D and 3D physics compiled to WebAssembly, so a replay on the server lands the same as the phone.",
+          "by": "Dimforge"
+        },
+        {
+          "name": "Matter.js",
+          "url": "https://brm.io/matter-js/",
+          "note": "Plain JavaScript 2D rigid bodies, for stacking, toppling and anything that needs to wobble.",
+          "by": "liabru"
+        },
+        {
+          "name": "GSAP",
+          "url": "https://gsap.com/",
+          "note": "Tweening and timelines, now free. The easy way to make a win moment land.",
+          "by": "Webflow"
+        },
+        {
+          "name": "howler.js",
+          "url": "https://howlerjs.com/",
+          "note": "Audio sprites and playback that works the same on every phone browser.",
+          "by": "James Simpson"
+        },
+        {
+          "name": "Tone.js",
+          "url": "https://tonejs.github.io/",
+          "note": "Synths and scheduling on the Web Audio clock, for music that follows the game."
+        },
+        {
+          "name": "ZzFX",
+          "url": "https://github.com/KilledByAPixel/ZzFX",
+          "note": "A sound effect is one line of numbers. No files to load.",
+          "by": "Frank Force"
+        },
+        {
+          "name": "boardgame.io",
+          "url": "https://boardgame.io/",
+          "note": "Turn-based state, moves and multiplayer sync, for games people play across a whole day."
+        },
+        {
+          "name": "Colyseus",
+          "url": "https://colyseus.io/",
+          "note": "Authoritative rooms for real-time multiplayer, with state synced to every seat.",
+          "by": "Endel Dreyer"
+        },
+        {
+          "name": "PartyKit",
+          "url": "https://www.partykit.io/",
+          "note": "A room per group chat on Cloudflare, for live shared boards without running a server."
+        },
+        {
+          "name": "rot.js",
+          "url": "https://ondras.github.io/rot.js/hp/",
+          "note": "Roguelike toolkit: field of view, pathfinding, map generators and a seeded random.",
+          "by": "ondras"
+        },
+        {
+          "name": "simplex-noise",
+          "url": "https://github.com/jwagner/simplex-noise.js",
+          "note": "Seeded noise for terrain, weather and anything that should look made rather than random.",
+          "by": "Jonas Wagner"
+        },
+        {
+          "name": "ink",
+          "url": "https://www.inklestudios.com/ink/",
+          "note": "The branching story language behind 80 Days, with a JavaScript runtime for dialogue and choices.",
+          "by": "inkle"
+        }
+      ]
+    },
+    {
+      "heading": "ASSETS WE OWN",
+      "items": [
+        {
+          "name": "Kenney Game Assets All-in-1",
+          "url": "https://kenney.itch.io/kenney-game-assets",
+          "by": "Kenney",
+          "licence": "CC0",
+          "note": "Every Kenney pack in one download: 150+ 2D sets, 50+ 3D kits, UI, icons, fonts and 16 audio packs that all match. Cards, casino sounds and particles in Full House Run."
+        },
+        {
+          "name": "Complete KayKit Collection",
+          "url": "https://kaylousberg.itch.io/",
+          "by": "Kay Lousberg",
+          "licence": "CC0",
+          "note": "Every KayKit set: adventurers with a shared animation rig, dungeons, hex tiles, city and board-game bits, as glTF ready for three.js."
+        },
+        {
+          "name": "Modern Interiors",
+          "url": "https://limezu.itch.io/moderninteriors",
+          "by": "LimeZu",
+          "licence": "paid",
+          "note": "Top-down pixel rooms in three sizes, with a character generator of outfits, hair and animations."
+        },
+        {
+          "name": "Modern Exteriors",
+          "url": "https://limezu.itch.io/modernexteriors",
+          "by": "LimeZu",
+          "licence": "paid",
+          "note": "Streets, shops, parks and vehicles that match Modern Interiors, for a whole town."
+        },
+        {
+          "name": "Modern Office, Modern Farm and Modern User Interface",
+          "url": "https://limezu.itch.io/",
+          "by": "LimeZu",
+          "licence": "paid",
+          "note": "The rest of the Modern set: office rooms, farm crops and animals, and pixel menus with a portrait generator."
+        },
+        {
+          "name": "RPG Fantasy Battlers and Fungus Cave",
+          "url": "https://limezu.itch.io/fantasy-battlers",
+          "by": "LimeZu",
+          "licence": "CC-BY 4.0 / paid",
+          "note": "Big animated battle monsters, and a glowing cave tileset with its own cast."
+        },
+        {
+          "name": "Tiny Swords",
+          "url": "https://pixelfrog-assets.itch.io/tiny-swords",
+          "by": "Pixel Frog",
+          "licence": "paid",
+          "note": "A little medieval army with the Enemy Pack: units, buildings, terrain and effects for strategy and defence games."
+        },
+        {
+          "name": "Pixel Adventure 2",
+          "url": "https://pixelfrog-assets.itch.io/pixel-adventure-2",
+          "by": "Pixel Frog",
+          "licence": "CC0",
+          "note": "Twenty animated platformer enemies, each with its own trick."
+        },
+        {
+          "name": "Pirate Bomb",
+          "url": "https://pixelfrog-assets.itch.io/pirate-bomb",
+          "by": "Pixel Frog",
+          "licence": "CC0",
+          "note": "A bomb-throwing platformer kit: a hero, five pirates that kick or swallow your bombs, objects and tiles."
+        },
+        {
+          "name": "Kings and Pigs",
+          "url": "https://pixelfrog-assets.itch.io/kings-and-pigs",
+          "by": "Pixel Frog",
+          "licence": "CC0",
+          "note": "A hammer-swinging king against bomb-lobbing pigs, with cannons, boxes, doors, hearts and a full tile-set."
+        },
+        {
+          "name": "Ninja Adventure",
+          "url": "https://pixel-boy.itch.io/ninja-adventure-asset-pack",
+          "by": "Pixel-boy",
+          "licence": "CC0",
+          "note": "A whole top-down RPG in one pack, with a Godot example project: characters, monsters, tiles, UI, music and sounds."
+        },
+        {
+          "name": "Sprout Lands premium",
+          "url": "https://cupnooble.itch.io/sprout-lands-asset-pack",
+          "by": "Cup Nooble",
+          "licence": "paid",
+          "note": "Soft farming tiles, animals and characters, for cozy games."
+        },
+        {
+          "name": "Complete UI Essential Pack",
+          "url": "https://crusenho.itch.io/complete-ui-essential-pack",
+          "by": "Crusenho",
+          "licence": "CC-BY 4.0",
+          "note": "Pixel panels, buttons, bars and icons in flat, paper, wood, stone and metal themes, for menus and HUDs."
+        },
+        {
+          "name": "Sonniss GDC 2026 Game Audio Bundle",
+          "url": "https://gdc.sonniss.com/",
+          "by": "Sonniss and 47 sound studios",
+          "licence": "royalty-free",
+          "note": "347 professional recordings, 7.5 GB: card dealing, crowds, weapons, weather, creatures and UI. Searchable by name on our side."
+        },
+        {
+          "name": "Cozy UI Pack",
+          "url": "https://dobo-ui.itch.io/cozy-ui",
+          "by": "dobo_ui",
+          "licence": "paid",
+          "note": "Pastel cartoon dialogue boxes, cards and panels, applied as 9-slice borders."
+        },
+        {
+          "name": "ITHappy 3D models",
+          "url": "https://ithappystudios.com/store/",
+          "by": "ITHappy Studios",
+          "licence": "paid",
+          "note": "Low-poly City Characters and the Interiors bundle: the crowds in Spotted 3D and Detective Zombie, the rooms in Next Door."
+        },
+        {
+          "name": "game-icons.net",
+          "url": "https://game-icons.net/",
+          "by": "Lorc, Delapouite and contributors",
+          "licence": "CC-BY 3.0",
+          "note": "Over four thousand game icons as SVG, in any colour you set."
+        }
+      ]
+    },
+    {
+      "heading": "ART AND TOOLS",
+      "items": [
+        {
+          "name": "Quaternius",
+          "url": "https://quaternius.com/",
+          "note": "Rigged, animated low-poly characters, creatures and props.",
+          "licence": "CC0",
+          "by": "Quaternius"
+        },
+        {
+          "name": "Poly Pizza",
+          "url": "https://poly.pizza/",
+          "note": "Search thousands of free low-poly models by what they are.",
+          "licence": "CC0 / CC-BY"
+        },
+        {
+          "name": "Lospec palettes",
+          "url": "https://lospec.com/palette-list",
+          "note": "Tested small palettes, for giving a game one look instead of forty colours."
+        },
+        {
+          "name": "Mixamo",
+          "url": "https://www.mixamo.com/",
+          "note": "Auto-rigging and a library of motion-capture animations for 3D characters.",
+          "by": "Adobe"
+        },
+        {
+          "name": "Aseprite",
+          "url": "https://www.aseprite.org/",
+          "note": "The pixel art and sprite animation editor we own. Opens LimeZu and Fantasy Battlers source files and exports sheets with frame data.",
+          "licence": "paid",
+          "by": "Igara Studio"
+        },
+        {
+          "name": "LDtk",
+          "url": "https://ldtk.io/",
+          "note": "A level editor that saves plain JSON, for handmade campaign levels next to generated ones.",
+          "by": "Deepnight Games"
+        },
+        {
+          "name": "Tiled",
+          "url": "https://www.mapeditor.org/",
+          "note": "The long-standing tile map editor, with loaders for every engine.",
+          "by": "Thorbjørn Lindeijer"
+        },
+        {
+          "name": "Rive",
+          "url": "https://rive.app/",
+          "note": "Interactive vector animation with state machines, for characters and buttons that react."
+        },
+        {
+          "name": "Nano Banana",
+          "url": "https://gemini.google/overview/image-generation/",
+          "note": "Gemini image editing and generation. Card art, sheet edits and anything with text in it.",
+          "by": "Google"
+        }
+      ]
+    },
+    {
+      "heading": "AUDIO",
+      "items": [
+        {
+          "name": "Freesound",
+          "url": "https://freesound.org/",
+          "note": "A searchable library of recorded sounds. Check each one's licence.",
+          "licence": "CC0 / CC-BY",
+          "by": "Universitat Pompeu Fabra"
+        },
+        {
+          "name": "jsfxr",
+          "url": "https://sfxr.me/",
+          "note": "Make retro blips, jumps and hits in the browser in seconds.",
+          "by": "chr15m, after DrPetter’s sfxr"
+        },
+        {
+          "name": "ChipTone",
+          "url": "https://sfbgames.itch.io/chiptone",
+          "note": "A deeper sound effect generator from SFB Games, with envelopes and layering.",
+          "by": "Tom Vian of SFB Games"
+        },
+        {
+          "name": "ElevenLabs sound effects",
+          "url": "https://elevenlabs.io/sound-effects",
+          "note": "Describe a sound in words and get a take back, for the one effect no pack has."
+        },
+        {
+          "name": "Incompetech",
+          "url": "https://incompetech.com/music/",
+          "note": "Kevin MacLeod's music library, sorted by mood and tempo.",
+          "licence": "CC-BY 4.0",
+          "by": "Kevin MacLeod"
+        },
+        {
+          "name": "Ovani Sound",
+          "url": "https://ovanisound.com/",
+          "by": "Ovani Sound",
+          "note": "Game music packs built to loop and layer, with intensity versions of each track. The free Mixtape Vol. 1 has one track in each of ten genres.",
+          "licence": "paid"
+        }
+      ]
+    },
+    {
+      "heading": "TYPE",
+      "items": [
+        {
+          "name": "Google Fonts",
+          "url": "https://fonts.google.com/",
+          "note": "Open fonts to self-host, so a game never waits on another server for its words."
+        },
+        {
+          "name": "Fontshare",
+          "url": "https://www.fontshare.com/",
+          "note": "Free display and text faces from Indian Type Foundry, with a character a stock font lacks."
+        },
+        {
+          "name": "Space Grotesk",
+          "url": "https://fonts.google.com/specimen/Space+Grotesk",
+          "note": "The house face in the Zen look.",
+          "by": "Florian Karsten"
+        }
+      ]
+    },
+    {
+      "heading": "UX AND DESIGN REFERENCE",
+      "items": [
+        {
+          "name": "Game UI Database",
+          "url": "https://www.gameuidatabase.com/",
+          "note": "Screenshots of menus, HUDs and inventories from thousands of games, filterable by screen type."
+        },
+        {
+          "name": "Interface In Game",
+          "url": "https://interfaceingame.com/",
+          "note": "Game interfaces collected screen by screen, including video of how they move."
+        },
+        {
+          "name": "Game Accessibility Guidelines",
+          "url": "https://gameaccessibilityguidelines.com/",
+          "note": "A plain checklist of what stops people playing, sorted by how easy it is to fix."
+        },
+        {
+          "name": "Game Programming Patterns",
+          "url": "https://gameprogrammingpatterns.com/",
+          "note": "Robert Nystrom's free book on game loops, state, commands and events.",
+          "by": "Robert Nystrom"
+        },
+        {
+          "name": "Red Blob Games",
+          "url": "https://www.redblobgames.com/",
+          "note": "Interactive explainers for hex grids, pathfinding and map generation.",
+          "by": "Amit Patel"
+        },
+        {
+          "name": "Game Maker's Toolkit",
+          "url": "https://www.youtube.com/@GMTK",
+          "note": "Short videos on why a mechanic works, from a designer's point of view.",
+          "by": "Mark Brown"
+        },
+        {
+          "name": "Juice it or lose it",
+          "url": "https://www.youtube.com/watch?v=Fy0aCDmgnxg",
+          "note": "The talk that shows the same breakout game going from dead to delightful with feedback alone.",
+          "by": "Martin Jonasson and Petri Purho"
+        },
+        {
+          "name": "Slay the Spire: metrics driven design",
+          "url": "https://www.youtube.com/watch?v=7rqfbvnO_H0",
+          "note": "How the card pool was balanced from pick rates and win rates across every run.",
+          "by": "Anthony Giovannetti of Mega Crit"
+        },
+        {
+          "name": "Puzzmo",
+          "url": "https://www.puzzmo.com/",
+          "note": "A daily puzzle site done carefully: one set a day, groups, streaks and leaderboards."
+        }
+      ]
+    },
+    {
+      "heading": "PLATFORMS AND REACH",
+      "items": [
+        {
+          "name": "Telegram Mini Apps",
+          "url": "https://core.telegram.org/bots/webapps",
+          "note": "Web games that open inside a group chat, with the chat's people already signed in."
+        },
+        {
+          "name": "Discord Embedded App SDK",
+          "url": "https://docs.discord.com/developers/activities/overview",
+          "note": "Activities: a web game that a voice channel launches and plays together."
+        },
+        {
+          "name": "Reddit Devvit",
+          "url": "https://developers.reddit.com/",
+          "note": "Interactive posts, so a daily game can live inside a subreddit."
+        },
+        {
+          "name": "CrazyGames developers",
+          "url": "https://developer.crazygames.com/",
+          "note": "A web portal with a large audience and an SDK for ads, accounts and saves."
+        },
+        {
+          "name": "Poki for developers",
+          "url": "https://developers.poki.com/",
+          "note": "A web portal that picks games, tests them with real players and pays a revenue share."
+        },
+        {
+          "name": "itch.io",
+          "url": "https://itch.io/",
+          "note": "Upload a web build and it is playable in an hour. Good for jams and early players."
+        },
+        {
+          "name": "Newgrounds",
+          "url": "https://www.newgrounds.com/",
+          "note": "The original web game community, still voting and still playing."
+        },
+        {
+          "name": "Web Push",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Push_API",
+          "note": "Tell subscribers today's board is up, including on iPhone from the home screen."
+        }
+      ]
+    },
+    {
+      "heading": "STEAM",
+      "items": [
+        {
+          "name": "Steamworks",
+          "url": "https://partner.steamgames.com/",
+          "note": "Store pages, builds, achievements, leaderboards and cloud saves."
+        },
+        {
+          "name": "steamworks.js",
+          "url": "https://github.com/ceifa/steamworks.js",
+          "note": "Steam's API from Node and Electron, for shipping a web game to Steam.",
+          "by": "ceifa"
+        },
+        {
+          "name": "Electron",
+          "url": "https://www.electronjs.org/",
+          "note": "A web game packaged as a desktop app. Vampire Survivors launched on Steam this way."
+        },
+        {
+          "name": "Tauri",
+          "url": "https://tauri.app/",
+          "note": "A smaller desktop wrapper using the system webview, for games that want a light download."
+        },
+        {
+          "name": "SteamDB",
+          "url": "https://steamdb.info/",
+          "note": "Follower counts, sales and release dates, for seeing how comparable games did."
+        },
+        {
+          "name": "How To Market A Game",
+          "url": "https://howtomarketagame.com/",
+          "note": "Chris Zukowski on wishlists, store pages and which genres sell on Steam.",
+          "by": "Chris Zukowski"
+        },
+        {
+          "name": "GameDiscoverCo",
+          "url": "https://gamediscover.co/",
+          "note": "A newsletter on how players actually find games, with the numbers.",
+          "by": "Simon Carless"
+        },
+        {
+          "name": "Steam Next Fest",
+          "url": "https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest",
+          "note": "The demo festival that turns a store page into wishlists, three times a year."
+        }
+      ]
+    },
+    {
+      "heading": "SHIPPING",
+      "items": [
+        {
+          "name": "Playwright",
+          "url": "https://playwright.dev/",
+          "note": "Drives a real browser, so every game is loaded, played and screenshotted before it counts as shipped."
+        },
+        {
+          "name": "Sentry",
+          "url": "https://sentry.io/",
+          "note": "Errors from real players' phones, with the line that threw."
+        },
+        {
+          "name": "tally",
+          "url": "https://github.com/Big-Head-Club/tally",
+          "note": "Our analytics. One script tag, SQLite on the server, no cookies, a live dashboard.",
+          "by": "Dan Viau"
+        }
+      ]
+    },
+    {
+      "heading": "THE CARTRIDGES",
+      "notes": true,
+      "items": [
+        {
+          "name": "Ten Midjourney photographs of cartridges, cut out with real alpha.",
+          "note": "A cartridge outline is not something a rounded corner can fake, so the silhouette is computed: colour distance against a per-scanline ground model, forced convex, with a separate shadow test used only to trim inward."
+        },
+        {
+          "name": "Each label is the game running.",
+          "note": "The ledger photographs every live game. That plate is printed into the photo window of the shell the game was dealt."
+        },
+        {
+          "name": "The sound is synthesised.",
+          "note": "Web Audio, scheduled on the audio clock so the seat lands with the cart and the chord with the light."
+        }
+      ]
+    }
+  ]
+}
