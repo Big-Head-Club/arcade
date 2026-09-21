@@ -21,11 +21,6 @@
           "note": "Every sheet in the Silly Ninjas kit: the five ninjas with their poses and emotes, and ten worlds of props, ground and cast. Shared by Silly Ninja Defense and Silly Ninja Squares."
         },
         {
-          "name": "The tray",
-          "url": "https://hundred-carts-production.up.railway.app/bar.js",
-          "note": "One script tag gives any game EJECT and SUBSCRIBE. It renders in a shadow root so it looks the same in every codebase and touches none of them."
-        },
-        {
           "name": "The pad",
           "url": "https://hundred-carts-production.up.railway.app/pad.js",
           "note": "One script tag and a PlayStation controller plays a game that was written for a mouse. It sends arrow keys, falls back to WASD, then to walking the buttons on screen, then to a drawn cursor that clicks — whichever the game turns out to want."
