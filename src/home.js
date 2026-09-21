@@ -23,7 +23,9 @@ export function homePage(feed, { publicUrl = '' } = {}) {
   }).join('\n');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Big Head Club arcade</title>
 <style>body{margin:0;background:#1c1a17;color:#e8e2d8;font:16px/1.5 ui-monospace,Menlo,monospace;padding:32px 20px}main{max-width:1100px;margin:0 auto}h1{font-size:20px;margin:0 0 4px}p{color:#9a9184;margin:0 0 16px}
-#intro{display:block;position:relative;width:100%;max-width:760px;aspect-ratio:16/9;margin:4px auto 24px;padding:0;border:0;border-radius:6px;overflow:hidden;background:#000;cursor:pointer}
+#cab{position:relative;width:min(100%,720px,calc(86vh * 899 / 1150));aspect-ratio:899/1150;margin:8px auto 28px}
+#cab>img{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#intro{position:absolute;left:18.8%;top:45.4%;width:62.6%;height:35.2%;padding:0;border:0;background:#000;cursor:pointer;overflow:hidden}
 #intro img,#intro iframe{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
 #intro i{position:absolute;left:50%;top:50%;width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;background:#f2812f;box-shadow:0 4px 18px rgba(0,0,0,.5);transition:transform .15s}
 #intro i::after{content:"";position:absolute;left:27px;top:21px;border-style:solid;border-width:13px 0 13px 21px;border-color:transparent transparent transparent #1c1a17}
@@ -46,7 +48,7 @@ li[hidden]{display:none}
 footer{margin:48px 0 0;padding-top:16px;border-top:1px solid #3a352f;color:#9a9184;font-size:12px}footer a{color:#9a9184}footer a:hover{color:#f2812f}</style></head>
 <body><main><nav class="pages" aria-label="Pages"><a href="/" aria-current="page">Games</a><a href="/resources">Resources</a></nav><h1>Big Head Club arcade</h1>
 <p>${feed.count} games.</p>
-<button id="intro" aria-label="Play 100 Games in 100 Days"><img src="/intro.jpg" alt=""><i></i></button>
+<div id="cab"><button id="intro" aria-label="Play 100 Games in 100 Days"><img src="/intro.jpg" alt=""><i></i></button><img src="/cabinet.webp" alt=""><img src="/cabinet-glass.webp" alt=""></div>
 <nav id="filters">${chips}</nav>
 <div id="sorts">Sort <button class="sort on" data-sort="plays">most played</button><span>·</span><button class="sort" data-sort="new">newest</button></div>
 <ol id="games">${rows}</ol>

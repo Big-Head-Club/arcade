@@ -21,6 +21,9 @@ import { readFileSync } from 'node:fs';
 
 // The intro video's thumbnail, served from here so the page asks YouTube for nothing until someone presses play.
 const INTRO_JPG = readFileSync(new URL('../assets/intro.jpg', import.meta.url));
+// The cabinet the intro plays in: a photoreal upright with its screen cut to alpha, and the glass over it.
+const CABINET = readFileSync(new URL('../assets/cabinet.webp', import.meta.url));
+const CABINET_GLASS = readFileSync(new URL('../assets/cabinet-glass.webp', import.meta.url));
 
 export function createArcade(opts = {}) {
   const dataDir = opts.dataDir || process.env.DATA_DIR || './data';
@@ -96,6 +99,8 @@ export function createArcade(opts = {}) {
 
     if (p === '/health') return send(res, 200, 'ok', 'text/plain');
     if (p === '/intro.jpg') return send(res, 200, INTRO_JPG, 'image/jpeg', { 'cache-control': 'public, max-age=86400' });
+    if (p === '/cabinet.webp') return send(res, 200, CABINET, 'image/webp', { 'cache-control': 'public, max-age=86400' });
+    if (p === '/cabinet-glass.webp') return send(res, 200, CABINET_GLASS, 'image/webp', { 'cache-control': 'public, max-age=86400' });
     if (p === '/terms') return send(res, 200, termsPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
     if (p === '/privacy') return send(res, 200, privacyPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
     if (p === '/resources') return send(res, 200, resourcesPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=600' });
