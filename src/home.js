@@ -13,7 +13,7 @@ export function homePage(feed, { publicUrl = '' } = {}) {
   const rows = feed.games.map((g) => {
     const cat = CATEGORIES.find((c) => c.id === g.category);
     const meta = [
-      `${g.plays.week} ${g.plays.by === 'runs' ? 'runs' : 'played'} this week`,
+      `${g.plays.month} ${g.plays.by === 'runs' ? 'runs' : 'played'} this month`,
       cat ? esc(cat.label) : '',
       g.platform && g.platform !== 'unknown' ? ({ mobile: '📱 mobile', desktop: '🖥 desktop', both: '📱🖥' })[g.platform] : '',
       g.variant ? esc(g.variant) : '',

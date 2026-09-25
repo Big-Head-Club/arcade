@@ -69,23 +69,27 @@ test('manifest from a repo replaces a seed row, and plays rank the feed', async 
   t.arcade.registry.setProbe('patient-zero', { status: 'live', latency: 200 });
   t.arcade.registry.setProbe('ringer', { status: 'live', latency: 200 });
   // browser events land in the hub keyed by hostname
-  const post = (site, n = 1) => Promise.all(Array.from({ length: n }, (_, i) => fetch(`${t.base}/i`, { method: 'POST', body: JSON.stringify([{ n: 'pageview', s: site }, { n: 'start', s: site }]), headers: { 'x-forwarded-for': `10.0.0.${i}`, 'user-agent': 'A' } })));
+  const send = (site, events, ip) => fetch(`${t.base}/i`, { method: 'POST', body: JSON.stringify(events.map((n) => (typeof n === 'string' ? { n, s: site } : { ...n, s: site }))), headers: { 'x-forwarded-for': ip, 'user-agent': 'A' } });
+  // people who played: the page starts a run and they click
+  const post = (site, n = 1) => Promise.all(Array.from({ length: n }, (_, i) => send(site, ['pageview', 'start', { n: 'click', d: { t: 'Play' } }], `10.0.0.${i}`)));
   await post('ringer.fly.dev', 3);
   await post('patient-zero.fly.dev', 1);
   await post('localhost', 5);                    // ignored
   const f = await (await fetch(`${t.base}/api/games.json`)).json();
   assert.deepEqual(f.games.map((g) => g.slug), ['ringer', 'patient-zero']);
   assert.equal(f.games[0].plays.d7, 3);
-  assert.equal(f.games[0].plays.engaged7, 3);    // the start event counts as engagement
-  assert.equal(f.games[0].plays.week, 3);
+  assert.equal(f.games[0].plays.engaged30, 3);
+  assert.equal(f.games[0].plays.month, 3);
   assert.equal(f.games[0].plays.by, 'runs');
-  assert.equal(f.games[0].starts7, 3);
+  assert.equal(f.games[0].runs30, 3);
   assert.equal(f.games[0].rank, 1);
   assert.deepEqual(f.families.spotted, ['ringer', 'patient-zero']);
-  // a crawler visiting the low-ranked game 10 times, pageviews only, does not lift it
-  await Promise.all(Array.from({ length: 10 }, (_, i) => fetch(`${t.base}/i`, { method: 'POST', body: JSON.stringify([{ n: 'pageview', s: 'patient-zero.fly.dev' }]), headers: { 'x-forwarded-for': `10.9.9.${i}`, 'user-agent': 'Mozilla/5.0 Chrome' } })));
+  // something that only loads the page 10 times does not lift the low-ranked game,
+  // even though the page fires a start on load
+  await Promise.all(Array.from({ length: 10 }, (_, i) => send('patient-zero.fly.dev', ['pageview', 'start'], `10.9.9.${i}`)));
   const f2 = await (await fetch(`${t.base}/api/games.json?nocache=${Date.now()}`)).json();
   assert.equal(f2.games[0].slug, 'ringer');
+  assert.equal(f2.games[1].plays.month, 1);      // still the one real run, not eleven
   const carts = await (await fetch(`${t.base}/api/carts.json`)).json();
   assert.deepEqual(Object.keys(carts[0]).slice(0, 4), ['s', 'n', 'u', 'a']);
   const one = await (await fetch(`${t.base}/api/games/patient-zero.json`)).json();
