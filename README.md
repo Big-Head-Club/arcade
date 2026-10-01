@@ -35,6 +35,29 @@ Status is `workshop` (no URL), `live`, or `down`.
 
 Each game carries a `platform` of mobile, desktop, or both; the feed reports `unknown` when the manifest has none.
 
+### Multiple domains
+
+`cart.json` can declare `origins: ["https://game.example", "https://www.game.example"]`.
+The feed publishes a deduplicated `origins` list containing the canonical URL's
+origin, the manifest's aliases, and verified hosting aliases in `seed/origins.json`.
+The seed applies to existing registry rows as well as refreshed manifests.
+GameADay uses this list to accept measurement requests from every registered origin.
+
+The October 1, 2026 inventory used Railway production-domain mappings, Fly app
+hostnames/certificates, live game assets, and Tally's stored site names. Add a
+new alias to the game's manifest or this inventory when adding a hosting domain.
+`mazeaday.xyz` and `www.paintsplash.xyz` are configured but currently fail TLS;
+their inclusion authorizes future measurements after hosting is repaired.
+Stealth Assassin also runs on `html-classic.itch.zone`; both retained upload paths
+carry its level/score/ghost telemetry, and the current upload serves that game.
+This is a shared hosting origin: assign a distinct Tally `data-site` before
+publishing another game there, so legacy hostname totals remain attributable.
+
+Feed event totals sum the manifest's `site` and distinct alias hostnames. Each
+hostname counts once per game. These are daily IP+UA hashes and run events, not
+deduplicated people across domains. Qualified browser identities and retention
+remain origin-local; historical events cannot reconstruct qualified playtime.
+
 ## Categories
 
 Seven, one per game, so the rack can be filtered by what kind of play it is:
@@ -68,6 +91,9 @@ read on the org's repos; without it only public repos are read),
 `PUBLIC_URL`, `CHROME_PATH` (for plates), `TZ`.
 
 ## Deploy
+
+Pushes to `main` run tests and deploy `bhc-arcade` through GitHub Actions.
+`FLY_API_TOKEN` is an app-scoped repository secret. Deployments are serialized.
 
 ```
 fly deploy

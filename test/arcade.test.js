@@ -34,12 +34,40 @@ test('manifest normalisation', () => {
   assert.equal(m.slug, 'salt-flats');
   assert.equal(m.url, 'https://salt-flats.fly.dev');
   assert.equal(m.site, 'salt-flats.fly.dev');
+  assert.deepEqual(m.origins, ['https://salt-flats.fly.dev']);
   assert.equal(m.family, 'salt-flats');
   assert.equal(m.repo, 'Big-Head-Club/salt-flats');
   assert.equal(m.shell, shellFor('salt-flats'));
   assert.throws(() => normalizeManifest({ slug: 'bad slug' }), /bad slug/);
   assert.throws(() => normalizeManifest({ slug: 'ok', started: 'yesterday' }), /started/);
   assert.throws(() => normalizeManifest({ slug: 'ok', url: 'ftp://x' }), /bad url/);
+});
+
+test('origins merge verified aliases with manifests and reject invalid schemes, credentials and wildcards', () => {
+  const m = normalizeManifest({ slug: 'semantic-centering', url: 'https://semantic-centering.fly.dev/play',
+    origins: ['https://SEMANTICCENTERING.xyz:443/', 'https://extra.example/play'] });
+  assert.deepEqual(m.origins, ['https://semantic-centering.fly.dev', 'https://semanticcentering.xyz',
+    'https://www.semanticcentering.xyz', 'https://extra.example']);
+  for (const origins of ['https://example.com', ['ftp://example.com'], ['https://user:pass@example.com'], ['https://*.example.com'], [null]]) {
+    assert.throws(() => normalizeManifest({ slug: 'sample', origins }), /origin/);
+  }
+});
+
+test('stored manifests expose new verified aliases and count each hostname once', async (ctx) => {
+  const t = await boot();
+  ctx.after(t.close);
+  t.arcade.registry.upsert({ slug: 'semantic-centering', name: 'SEMANTIC CENTERING', url: 'https://semantic-centering.fly.dev',
+    site: 'semanticcentering.xyz', origins: ['https://semanticcentering.xyz/', 'https://semanticcentering.xyz/play'] });
+  const hosts = ['semantic-centering.fly.dev', 'semanticcentering.xyz', 'www.semanticcentering.xyz', 'unrelated.example'];
+  for (const site of hosts) await fetch(`${t.base}/i`, { method: 'POST', headers: { 'user-agent': 'A' },
+    body: JSON.stringify(['pageview', 'start', 'click'].map((n) => ({ n, s: site }))) });
+  const f = await (await fetch(`${t.base}/api/games.json?all=1`)).json();
+  const g = f.games.find((g) => g.slug === 'semantic-centering');
+  assert.deepEqual(g.origins, ['https://semantic-centering.fly.dev', 'https://semanticcentering.xyz', 'https://www.semanticcentering.xyz']);
+  assert.equal(g.plays.d7, 3);
+  assert.equal(g.plays.engaged30, 3);
+  assert.equal(g.runs30, 3);
+  assert.equal(g.events30, 9);
 });
 
 test('seed fills the registry and the feed lists it', async () => {

@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { CATEGORY_IDS } from './categories.js';
 // cart.json: the one file a game repo carries so the fleet knows about it.
 export const SHELLS = ['whale', 'galaxy', 'fish', 'crown', 'arch', 'tower', 'hare', 'scarab', 'moth', 'lighthouse'];
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+const VERIFIED_ORIGINS = JSON.parse(readFileSync(new URL('../seed/origins.json', import.meta.url), 'utf8'));
 
 export function shellFor(slug) {
   let h = 0;
@@ -20,12 +22,19 @@ export function normalizeManifest(raw, { repo } = {}) {
   let url = str(raw.url, 300);
   if (url && !/^https?:\/\//.test(url)) throw new Error(`bad url "${url}"`);
   url = url.replace(/\/$/, '');
+  if (raw.origins !== undefined && !Array.isArray(raw.origins)) throw new Error('origins must be an array');
+  const origins = [...new Set([...(url ? [url] : []), ...(VERIFIED_ORIGINS[slug] || []), ...(raw.origins || [])].map((value) => {
+    if (typeof value !== 'string' || !URL.canParse(value)) throw new Error(`bad origin "${value}"`);
+    const origin = new URL(value);
+    if (!['http:', 'https:'].includes(origin.protocol) || origin.username || origin.password || origin.hostname.includes('*')) throw new Error(`bad origin "${value}"`);
+    return origin.origin;
+  }))];
   const started = str(raw.started, 10);
   if (started && !/^\d{4}-\d{2}-\d{2}$/.test(started)) throw new Error(`bad started "${started}" (YYYY-MM-DD)`);
   const shell = SHELLS.includes(raw.shell) ? raw.shell : shellFor(slug);
   const state = raw.state === 'volume' ? 'volume' : 'none';
   return {
-    slug, name, url, started,
+    slug, name, url, origins, started,
     designers: list(raw.designers, 6),
     tags: list(raw.tags),
     family: str(raw.family, 64).toLowerCase() || slug,

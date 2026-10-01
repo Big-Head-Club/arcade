@@ -3,6 +3,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { normalizeManifest } from './manifest.js';
 
 export function openRegistry(file) {
   if (file !== ':memory:') mkdirSync(dirname(file), { recursive: true });
@@ -31,7 +32,7 @@ export function openRegistry(file) {
   const del = db.prepare('delete from games where slug=?');
   const metaGet = db.prepare('select v from meta where k=?');
   const metaSet = db.prepare('insert into meta (k,v) values (?,?) on conflict(k) do update set v=excluded.v');
-  const row = (r) => r && { ...r, manifest: JSON.parse(r.manifest) };
+  const row = (r) => r && { ...r, manifest: normalizeManifest(JSON.parse(r.manifest)) };
   return {
     upsert(m, { source = 'manifest' } = {}) { upsert.run(m.slug, JSON.stringify(m), source, m.repo || null, Date.now()); return this.get(m.slug); },
     seed(m) { upsertSeed.run(m.slug, JSON.stringify(m), m.repo || null, Date.now()); },

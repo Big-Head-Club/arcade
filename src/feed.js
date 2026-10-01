@@ -1,6 +1,6 @@
 import { categoryOf, CATEGORY_IDS } from './categories.js';
 // The ranked list hundred-carts reads. Plays come from the tally hub, joined
-// on the manifest's site (the URL's hostname).
+// on the manifest's site and every verified game hostname.
 export async function buildFeed(registry, tally, { includeAll = false, sort = 'plays', cat = '' } = {}) {
   const [d7, d30, all, runs30, e7, e30] = await Promise.all([tally.sites(7), tally.sites(30), tally.sites(3650), tally.engagedCountByName('start', 30), tally.engagedSites(7), tally.engagedSites(30)]);
   const by = (rows) => Object.fromEntries(rows.map((r) => [r.site, r]));
@@ -10,21 +10,23 @@ export async function buildFeed(registry, tally, { includeAll = false, sort = 'p
     .filter((r) => includeAll || r.status === 'live')
     .map((r) => {
       const m = r.manifest;
+      const sites = [...new Set([m.site, ...m.origins.map((origin) => new URL(origin).hostname)])];
+      const total = (rows, key) => sites.reduce((n, site) => n + Number(rows[site]?.[key] ?? 0), 0);
       // engaged: visitors who clicked or stayed ten seconds. A game that fires a start
       // on page load hands one to every crawler, so a start alone never counts.
-      const runs = st[m.site]?.c ?? 0;
-      const plays = { engaged7: g7[m.site]?.engaged ?? 0, engaged30: g30[m.site]?.engaged ?? 0, d7: s7[m.site]?.visitors ?? 0, d30: s30[m.site]?.visitors ?? 0, all: sAll[m.site]?.visitors ?? 0 };
+      const runs = total(st, 'c');
+      const plays = { engaged7: total(g7, 'engaged'), engaged30: total(g30, 'engaged'), d7: total(s7, 'visitors'), d30: total(s30, 'visitors'), all: total(sAll, 'visitors') };
       // A play is a run when the game reports runs (a start event per run); otherwise an engaged person.
       plays.month = runs > 0 ? runs : plays.engaged30;
       plays.week = plays.month;                       // what older readers of this feed expect
       plays.by = runs > 0 ? 'runs' : 'people';
       return {
-        slug: m.slug, name: m.name, url: m.url, shell: m.shell, plate: `/plates/${m.slug}`,
+        slug: m.slug, name: m.name, url: m.url, origins: m.origins, shell: m.shell, plate: `/plates/${m.slug}`,
         designers: m.designers, started: m.started, tags: m.tags, family: m.family, variant: m.variant,
         description: m.description, repo: m.repo, state: m.state, platform: m.platform || 'unknown',
         category: categoryOf(m),
         status: r.status, latency: r.latency, checked: r.checked, source: r.source,
-        plays, runs30: runs, events30: s30[m.site]?.events ?? 0,
+        plays, runs30: runs, events30: total(s30, 'events'),
       };
     });
   const cmp = sort === 'started'
