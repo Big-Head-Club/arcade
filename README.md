@@ -46,15 +46,19 @@ GameADay uses this list to accept measurement requests from every registered ori
 The October 1, 2026 inventory used Railway production-domain mappings, Fly app
 hostnames/certificates, live game assets, and Tally's stored site names. Add a
 new alias to the game's manifest or this inventory when adding a hosting domain.
-`mazeaday.xyz` and `www.paintsplash.xyz` are configured but currently fail TLS;
-their inclusion authorizes future measurements after hosting is repaired.
-Stealth Assassin also runs on `html-classic.itch.zone`; both retained upload paths
-carry its level/score/ghost telemetry, and the current upload serves that game.
-This is a shared hosting origin: assign a distinct Tally `data-site` before
-publishing another game there, so legacy hostname totals remain attributable.
+`mazeaday.xyz`, `www.paintsplash.xyz`, `playequals.xyz` and `www.playequals.xyz`
+are configured but failed TLS in the October 13 checks; their inclusion authorizes
+measurements once hosting is repaired.
+Spin Defense's retained solo build runs at `html-classic.itch.zone/html/19469184-2037219/`;
+Stealth Assassin runs at `/html/19354992/` on the same origin. Both games register
+that origin for explicit game-ID measurement. Historical legacy traffic requires
+these upload-specific paths for attribution; future uploads can use distinct
+Tally `data-site` values.
 
-Feed event totals sum the manifest's `site` and distinct alias hostnames. Each
-hostname counts once per game. These are daily IP+UA hashes and run events, not
+Feed event totals sum dedicated `site` keys and distinct alias hostnames owned by
+one registered game. Shared keys are excluded even when another owner is hidden
+or unavailable; their stored events remain unattributed by this hostname-only feed.
+Each dedicated hostname counts once per game. These are daily IP+UA hashes and run events, not
 deduplicated people across domains. Qualified browser identities and retention
 remain origin-local; historical events cannot reconstruct qualified playtime.
 

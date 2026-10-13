@@ -1,16 +1,25 @@
 import { categoryOf, CATEGORY_IDS } from './categories.js';
 // The ranked list hundred-carts reads. Plays come from the tally hub, joined
-// on the manifest's site and every verified game hostname.
+// on the manifest's site and verified hostnames owned by just one registered game.
 export async function buildFeed(registry, tally, { includeAll = false, sort = 'plays', cat = '' } = {}) {
   const [d7, d30, all, runs30, e7, e30] = await Promise.all([tally.sites(7), tally.sites(30), tally.sites(3650), tally.engagedCountByName('start', 30), tally.engagedSites(7), tally.engagedSites(30)]);
   const by = (rows) => Object.fromEntries(rows.map((r) => [r.site, r]));
   const s7 = by(d7), s30 = by(d30), sAll = by(all), st = by(runs30), g7 = by(e7), g30 = by(e30);
-  let games = registry.all()
+  const rows = registry.all(), owners = new Map();
+  // Site totals have no pathname dimension. Hidden/down owners still make a shared site ambiguous.
+  for (const { manifest: m } of rows) {
+    for (const site of [m.site, ...m.origins.map((origin) => new URL(origin).hostname)]) {
+      if (!owners.has(site)) owners.set(site, new Set());
+      owners.get(site).add(m.slug);
+    }
+  }
+  let games = rows
     .filter((r) => !r.manifest.hidden)
     .filter((r) => includeAll || r.status === 'live')
     .map((r) => {
       const m = r.manifest;
-      const sites = [...new Set([m.site, ...m.origins.map((origin) => new URL(origin).hostname)])];
+      const sites = [...new Set([m.site, ...m.origins.map((origin) => new URL(origin).hostname)])]
+        .filter((site) => owners.get(site).size === 1);
       const total = (rows, key) => sites.reduce((n, site) => n + Number(rows[site]?.[key] ?? 0), 0);
       // engaged: visitors who clicked or stayed ten seconds. A game that fires a start
       // on page load hands one to every crawler, so a start alone never counts.

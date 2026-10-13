@@ -6,6 +6,7 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createArcade } from '../src/server.js';
+import { buildFeed } from '../src/feed.js';
 import { normalizeManifest, shellFor } from '../src/manifest.js';
 import { probeOne } from '../src/probe.js';
 
@@ -48,6 +49,15 @@ test('origins merge verified aliases with manifests and reject invalid schemes, 
     origins: ['https://SEMANTICCENTERING.xyz:443/', 'https://extra.example/play'] });
   assert.deepEqual(m.origins, ['https://semantic-centering.fly.dev', 'https://semanticcentering.xyz',
     'https://www.semanticcentering.xyz', 'https://extra.example']);
+  for (const [slug, url, path] of [
+    ['spin-tower', 'https://spindefense.xyz', '/html/19469184-2037219/index.html'],
+    ['ninja-stealth', 'https://stealthassassin.xyz', '/html/19354992/index.html'],
+  ]) {
+    const game = normalizeManifest({ slug, url });
+    assert.equal(game.slug, slug);
+    assert.deepEqual(game.origins.filter((origin) => origin === new URL(path, 'https://html-classic.itch.zone').origin),
+      ['https://html-classic.itch.zone']);
+  }
   for (const origins of ['https://example.com', ['ftp://example.com'], ['https://user:pass@example.com'], ['https://*.example.com'], [null]]) {
     assert.throws(() => normalizeManifest({ slug: 'sample', origins }), /origin/);
   }
@@ -68,6 +78,67 @@ test('stored manifests expose new verified aliases and count each hostname once'
   assert.equal(g.plays.engaged30, 3);
   assert.equal(g.runs30, 3);
   assert.equal(g.events30, 9);
+});
+
+test('shared itch host history is not attributed to either game, even when an owner is filtered out', async (ctx) => {
+  const t = await boot();
+  ctx.after(async () => { await t.close(); await assert.rejects(fetch(`${t.base}/health`)); });
+  const spinPath = '/html/19469184-2037219/index.html', stealthPath = '/html/19354992/index.html';
+  t.arcade.registry.upsert({ slug: 'spin-tower', url: `https://html-classic.itch.zone${spinPath}`, category: 'arcade',
+    origins: ['http://spindefense.xyz', 'https://spindefense.xyz:8443'] });
+  const stealth = { slug: 'ninja-stealth', url: `https://html-classic.itch.zone${stealthPath}`, category: 'spot', site: 'ninja-legacy.example' };
+  t.arcade.registry.upsert(stealth);
+  t.arcade.registry.setProbe('spin-tower', { status: 'live' });
+  const events = [
+    ['html-classic.itch.zone', spinPath], ['html-classic.itch.zone', stealthPath],
+    ['spindefense.xyz', '/'], ['www.spindefense.xyz', '/'],
+    ['stealthassassin.xyz', '/'], ['www.stealthassassin.xyz', '/'], ['ninja-legacy.example', '/'],
+  ];
+  for (const [i, [site, path]] of events.entries()) {
+    await fetch(`${t.base}/i`, { method: 'POST', headers: { 'user-agent': `player-${i}` },
+      body: JSON.stringify(['pageview', 'start', 'click'].map((n) => ({ n, s: site, p: path }))) });
+  }
+  for (const [status, hidden] of [['live', false], ['live', true], ['down', false], ['workshop', false]]) {
+    t.arcade.registry.upsert({ ...stealth, hidden });
+    t.arcade.registry.setProbe('ninja-stealth', { status });
+    for (const options of [{}, { includeAll: true }, { cat: 'arcade' }]) {
+      const feed = await buildFeed(t.arcade.registry, t.arcade.tally, options);
+      const ninjaVisible = !hidden && (options.includeAll || status === 'live') && !options.cat;
+      assert.equal(feed.games.length, ninjaVisible ? 2 : 1);
+      for (const game of feed.games) {
+        const dedicated = game.slug === 'spin-tower' ? 2 : 3;
+        assert.deepEqual(game.plays, { engaged7: dedicated, engaged30: dedicated, d7: dedicated,
+          d30: dedicated, all: dedicated, month: dedicated, week: dedicated, by: 'runs' });
+        assert.equal(game.runs30, dedicated); assert.equal(game.events30, dedicated * 3);
+        assert.ok(game.origins.includes('https://html-classic.itch.zone'));
+      }
+    }
+  }
+  const shared = (await t.arcade.tally.sites(30)).find((row) => row.site === 'html-classic.itch.zone');
+  assert.equal(shared.visitors, 2); assert.equal(shared.events, 6);
+  const raw = await (await fetch(`${t.base}/admin/analytics/tok/events.json?site=html-classic.itch.zone`)).json();
+  assert.equal(raw.truncated, false); assert.equal(raw.events.length, 6);
+  assert.deepEqual([...new Set(raw.events.map((event) => event.path))].sort(), [spinPath, stealthPath].sort());
+  assert.deepEqual(await t.arcade.tally.measurementStats(), []);
+});
+
+test('site ownership uses distinct slugs and hostnames across schemes, ports and explicit site keys', async (ctx) => {
+  const t = await boot();
+  ctx.after(async () => { await t.close(); await assert.rejects(fetch(`${t.base}/health`)); });
+  t.arcade.registry.upsert({ slug: 'one', url: 'https://shared.example/one', site: 'one-dedicated.example',
+    origins: ['https://site-owner.example', 'https://one-dedicated.example', 'http://one-dedicated.example:8080'] });
+  t.arcade.registry.upsert({ slug: 'two', url: 'http://shared.example:8080/two', site: 'two-dedicated.example' });
+  t.arcade.registry.upsert({ slug: 'hidden', site: 'site-owner.example', hidden: true });
+  for (const site of ['shared.example', 'site-owner.example', 'one-dedicated.example', 'two-dedicated.example']) {
+    await fetch(`${t.base}/i`, { method: 'POST', headers: { 'user-agent': 'A' },
+      body: JSON.stringify(['pageview', 'start', 'click'].map((n) => ({ n, s: site }))) });
+  }
+  const feed = await buildFeed(t.arcade.registry, t.arcade.tally, { includeAll: true });
+  assert.deepEqual(feed.games.map((game) => game.slug).sort(), ['one', 'two']);
+  for (const game of feed.games) {
+    assert.equal(game.plays.d7, 1); assert.equal(game.plays.engaged30, 1);
+    assert.equal(game.runs30, 1); assert.equal(game.events30, 3);
+  }
 });
 
 test('seed fills the registry and the feed lists it', async () => {
