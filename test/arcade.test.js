@@ -315,6 +315,16 @@ test('terms and privacy are served, and say what we actually do', async () => {
   await t.close();
 });
 
+test('the TV app is served for sideloading', async () => {
+  const t = await boot({ seed: true });
+  const apk = await fetch(`${t.base}/tv.apk`);
+  assert.equal(apk.status, 200);
+  assert.equal(apk.headers.get('content-type'), 'application/vnd.android.package-archive');
+  const bytes = Buffer.from(await apk.arrayBuffer());
+  assert.equal(bytes.subarray(0, 2).toString(), 'PK');   // an APK is a zip
+  await t.close();
+});
+
 test('resources is the second page: every link from the list, linked both ways with the games', async () => {
   const t = await boot({ seed: true });
   const res = await fetch(`${t.base}/resources`);

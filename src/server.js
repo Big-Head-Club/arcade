@@ -21,6 +21,9 @@ import { readFileSync } from 'node:fs';
 
 // The intro video's thumbnail, served from here so the page asks YouTube for nothing until someone presses play.
 const INTRO_JPG = readFileSync(new URL('../assets/intro.jpg', import.meta.url));
+// The Big Head Club TV app, for sideloading onto a Fire TV or Google TV with Downloader
+// until the stores list it. Built and signed from Big-Head-Club/bhc-tv.
+const TV_APK = readFileSync(new URL('../assets/bhc-tv.apk', import.meta.url));
 
 export function createArcade(opts = {}) {
   const dataDir = opts.dataDir || process.env.DATA_DIR || './data';
@@ -96,6 +99,7 @@ export function createArcade(opts = {}) {
 
     if (p === '/health') return send(res, 200, 'ok', 'text/plain');
     if (p === '/intro.jpg') return send(res, 200, INTRO_JPG, 'image/jpeg', { 'cache-control': 'public, max-age=86400' });
+    if (p === '/tv.apk') return send(res, 200, TV_APK, 'application/vnd.android.package-archive', { 'content-disposition': 'attachment; filename="big-head-club-tv.apk"', 'cache-control': 'public, max-age=300' });
     if (p === '/terms') return send(res, 200, termsPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
     if (p === '/privacy') return send(res, 200, privacyPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=3600' });
     if (p === '/resources') return send(res, 200, resourcesPage(), 'text/html; charset=utf-8', { 'cache-control': 'public, max-age=600' });
